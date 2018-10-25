@@ -1,0 +1,9 @@
+{
+    "appId" : "id",
+    "user_login" : "login",
+    "user_password" : "pass",
+    "tg_token" : "token",
+
+    "timer_tick" : 60000,
+    "time_format" : ""
+}
