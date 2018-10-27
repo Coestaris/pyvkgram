@@ -10,7 +10,7 @@ def init(cfg):
 def get_group_info(grId):
     global api
     response = api.groups.getById(group_id=grId, fields=['name', 'id'])
-    return ( response[0]["screen_name"], response[0]["id"] )
+    return ( response[0]["name"], response[0]["id"] )
 
 def get_posts(grId, isGroup, count, offset):
     global api

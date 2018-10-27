@@ -1,4 +1,6 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import telegram
+
 import logging
 import json
 import dbUser
@@ -9,9 +11,9 @@ import language
 import cfg
 import vkcore
 
-urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$")
-urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$")
-urlRePublicId = re.compile(r"^\d{4,}$")
+urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
+urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
+urlRePublicId = re.compile(r"^\d{4,}$", re.MULTILINE)
 
 def loadCfg():
     with open('../cfg.json') as f:
@@ -31,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 def start(bot, update):
     if(not db.has_user(update.message.chat_id)):
-        update.message.reply_text("new one!")
         db.store_user(dbUser.dbUser(update.message.chat_id))
 
     user = db.get_user(update.message.chat_id)
@@ -47,22 +48,42 @@ def error(bot, update, error):
 def subscribe(bot, update):
     user = db.get_user(update.message.chat_id)
     url = update.message.text.replace("/subscribe", "").strip()
-    
+    id = ""
+
     if(url == ""):
         update.message.reply_text(language.getLang(user.lang)["err_empty_public_url"])
+        return
     else:
-        if(urlRePublic.search(url)):
-            id = urlRePublic.match(url)
-            print(id)
+        if(urlRePublicFull.search(url)):
+            id = urlRePublicFull.search(url).group()
 
-        elif(urlRePublicFull.search(url)):
-            id = urlRePublicFull.match(url).string
-            print("full " + id)
+        elif(urlRePublic.search(url)):
+            id = urlRePublic.search(url).group()
+
         elif(urlRePublicId.search(url)):
-            id = urlRePublicId.match(url).string
-            print("id " + id)
+            id = urlRePublicId.search(url).group()
+
         else:
-            print("wrong format")
+            update.message.reply_text(language.getLang(user.lang)["err_wrong_public_url"])
+            return
+    
+    if(any(x["id"] == int(id) for x in user.vkGroups)):
+        update.message.reply_text(language.getLang(user.lang)["err_already_exists_url"])
+        return
+
+
+    info = vkcore.get_group_info(id)
+    if(info[0] == ''):
+        update.message.reply_text(language.getLang(user.lang)["err_cant_find_url"])
+        return
+
+    user.vkGroups.append( { "name" : info[0], "id" : info[1] } )
+    db.store_user(user)
+    
+    bot.send_message(
+        chat_id = update.message.chat_id, 
+        text = language.getLang(user.lang)["succ_added_new_url"].format(info[0], info[1]), 
+        parse_mode = telegram.ParseMode.MARKDOWN)
 
 def main():
     cfg = loadCfg()
