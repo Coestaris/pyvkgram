@@ -45,6 +45,22 @@ def help(bot, update):
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
+def getGroups(bot, update):
+    user = db.get_user(update.message.chat_id)
+    if(len(user.vkGroups) == 0):
+        update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"])
+    else:
+        text = language.getLang(user.lang)["group_list"] + '\n'
+        for group in user.vkGroups:
+            text += '- *{}* (ID: {})\n'.format(group["name"], group["id"])
+        
+        bot.send_message(
+            chat_id = update.message.chat_id, 
+            text = text, 
+            parse_mode = telegram.ParseMode.MARKDOWN)
+        
+        
+
 def subscribe(bot, update):
     user = db.get_user(update.message.chat_id)
     url = update.message.text.replace("/subscribe", "").strip()
@@ -96,6 +112,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("subscribe", subscribe))
+    dp.add_handler(CommandHandler("getgroups", getGroups))
     dp.add_error_handler(error)
 
     logger.log(logging.INFO, "Starting polling...")
