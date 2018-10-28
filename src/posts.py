@@ -1,3 +1,6 @@
+import vkcore
+from enum import Enum
+
 class post:
     
     def escapeText(self):
@@ -29,16 +32,21 @@ class post:
         if('comments' in input and 'count' in input['comments']): self.commentsCount = input['comments']['count']
         else: self.commentsCount = -1
 
+        self.attachments = []
         if('attachments' in input and len(input['attachments']) != 0):
             for attachment in input['attachments']:
                 if(attachment['type'] == 'photo' or attachment['type'] == 'posted_photo'):
-                    print('Unknown format {}'.format(attachment['type']))
+                    self.attachments.append(photoAttachment(attachment["photo"]))
+
                 elif(attachment['type'] == 'link'):
-                    print('Unknown format {}'.format(attachment['type']))
+                    self.attachments.append(linkAttachment(attachment["link"]))
+
                 elif(attachment['type'] == 'doc'):
-                    print('Unknown format {}'.format(attachment['type']))
+                    self.attachments.append(docAttachment(attachment["doc"]))
+
                 elif(attachment['type'] == 'video'):
-                    print('Unknown format {}'.format(attachment['type']))
+                    #self.attachments.append(videoAttachment(attachment["video"]))
+                    pass
                 elif(attachment['type'] == 'audio'):
                     print('Unknown format {}'.format(attachment['type']))
                 elif(attachment['type'] == 'graffiti'):
@@ -65,8 +73,152 @@ class post:
             "isPinned" : self.isPinned,
             #"postSource" : self.postSource,
             "text" : (self.text[1:50] if len(self.text) > 50 else self.text) if self.text != '' else "<empty>",
-            "attachments" : [],
+            "attachments" : [x.toDebugJSON() for x in self.attachments],
             "likeCount" : self.likeCount,
             "repostsCount" : self.repostsCount,
             "commentsCount" : self.commentsCount  
+        }
+
+class attachmentTypes(Enum):
+    photo = 1
+    video = 2
+    doc = 3
+    link = 4
+
+class attachment:
+    
+    def __init__(self, type):
+        self.type = type
+
+    def toDebugJSON(self):
+        return {
+            "type" : self.type
+        }
+
+class docAttachment(attachment):
+
+    def __init__(self, input):
+        self.type = attachmentTypes.doc
+
+        if('url' in input): self.url = input['url'] 
+        else: self.url = ""
+
+        if('type' in input): self.type = input['type'] 
+        else: self.type = ""
+
+        if('title' in input): self.title = input['title'] 
+        else: self.title = ""
+
+        if('ext' in input): self.ext = input['ext'] 
+        else: self.ext = ""
+
+        if('size' in input): self.size = input['size'] 
+        else: self.size = ""
+
+    def toDebugJSON(self):
+        return {
+            "type" : self.type,
+            "url" : self.url,
+            "title" : self.title,
+            "ext" : self.ext,
+            "size" : self.size
+        }
+
+class linkAttachment(attachment):
+
+    def toMarkdown(self):
+        return "[{}]({})".format(self.title, self.url)
+
+    def __init__(self, input):
+        self.type = attachmentTypes.link
+
+        if('url' in input): self.url = input['url'] 
+        else: self.url = ""
+
+        if('title' in input): self.title = input['title'] 
+        else: self.title = ""
+
+    def toDebugJSON(self):
+        return {
+            "type" : self.type,
+            "url" : self.url,
+            "title" : self.title
+        }
+
+class videoAttachment(attachment):
+    
+    def getUrl(self):
+        return list(self.files.values())[-1]
+    
+    def __init__(self, input):
+        self.type =  attachmentTypes.video
+
+        access_key = input['access_key']
+        id = input['id']
+        owner_id = input['owner_id']
+
+        info = vkcore.get_video(owner_id, id, access_key)
+        
+        if('duration' in info): self.duration = info['duration']
+        else: self.duration = -1
+
+        if('title' in info): self.title = info['title']
+        else: self.title = ""
+
+        if('description' in info): self.description = info['description']
+        else: self.description = ""
+
+        if('files' in info): self.files = info['files']
+        else: self.files = { 'player' : info['player'] }
+
+    def toDebugJSON(self):
+        return {
+            "type" : self.type,
+            "title" : self.title,
+            "description" : self.description,
+            "files" : self.files
+        }
+
+class photoAttachment(attachment):
+
+    def getUrl(self):
+        return self.sizes[-1]
+
+    def __init__(self, input):
+        self.type = attachmentTypes.photo
+
+        if('id' in input): self.id = input['id'] 
+        else: self.id = -1
+
+        if('album_id' in input): self.album_id = input['album_id'] 
+        else: self.album_id = -1
+
+        if('width' in input): self.width = input['width'] 
+        else: self.width = -1
+
+        if('height' in input): self.height = input['height'] 
+        else: self.height = -1
+
+        self.sizes = []
+        if('photo_75' in input):
+            self.sizes.append( { 'name' : 75, 'url' : input['photo_75'] } )
+        if('photo_130' in input):
+            self.sizes.append( { 'name' : 103, 'url' : input['photo_130'] } )
+        if('photo_604' in input):
+            self.sizes.append( { 'name' : 604, 'url' : input['photo_604'] } )
+        if('photo_807' in input):
+            self.sizes.append( { 'name' : 807, 'url' : input['photo_807'] } )
+        if('photo_1280' in input):
+            self.sizes.append( { 'name' : 1280, 'url' : input['photo_1280'] } )        
+        if('photo_2560' in input):
+            self.sizes.append( { 'name' : 2560, 'url' : input['photo_2560'] } )
+
+    def toDebugJSON(self):
+        return {
+            "type" : self.type,
+            "id" : self.id,
+            "album_id" : self.album_id,
+            "width" : self.width,
+            "height" : self.height,
+            "sizes" : self.sizes  
         }

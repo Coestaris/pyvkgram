@@ -12,6 +12,7 @@ import db
 import dbUser
 import language
 import vkcore
+from posts import attachmentTypes
 
 urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
 urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
@@ -56,7 +57,45 @@ def send_post(bot, grName, grId, lang, id, post):
     if(post.text != ''):
         text += "\n\n" + post.escapeText()
 
-    bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+    if(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.photo):
+        
+        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
+        bot.send_photo(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, photo = post.attachments[0].getUrl()['url'] )
+
+    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.video):
+
+        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
+        bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
+
+    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.doc):
+
+        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
+        bot.send_document(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, document = post.attachments[0].url, filename = post.attachments[0].title)
+    else:
+
+        if(len(post.attachments) != 0):
+            for a in [x for x in post.attachments if x.type == attachmentTypes.link]:
+                text += "\n" + a.toMarkdown()
+
+            media_group = []
+            for a in [x for x in post.attachments if x.type == attachmentTypes.photo]:
+                media_group.append(telegram.InputMediaPhoto(a.getUrl()["url"]))
+           
+            for a in [x for x in post.attachments if x.type == attachmentTypes.video]:
+                media_group.append(telegram.InputMediaVideo(a.getUrl()))
+           
+            if(len(media_group) != 0):
+
+                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
+                bot.send_media_group(chat_id = id, media = media_group)
+            
+            for a in [x for x in post.attachments if x.type == attachmentTypes.doc]:
+
+                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
+                bot.send_document(chat_id = id, document = a.url, filename = a.title)
+
+        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
+        bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
     pass
 
 @send_typing_action
@@ -155,8 +194,6 @@ def textInput(bot, update):
 
                 posts = vkcore.get_posts(id, True, user.getPosts["count"], user.getPosts["offset"])
                 for post in posts:
-
-                    print(post.toDebugJSON())
                     send_post(bot, name, id, user.lang, user.teleId, post)
 
         else:
@@ -211,14 +248,14 @@ def subscribe(bot, update):
             update.message.reply_text(language.getLang(user.lang)["err_wrong_public_url"], reply_markup = { "remove_keyboard" : True })
             return
     
-    if(any(x["id"] == int(id) for x in user.vkGroups)):
-        update.message.reply_text(language.getLang(user.lang)["err_already_exists_url"], reply_markup = { "remove_keyboard" : True })
-        return
-
-
     info = vkcore.get_group_info(id)
+
     if(info[0] == ''):
         update.message.reply_text(language.getLang(user.lang)["err_cant_find_url"], reply_markup = { "remove_keyboard" : True })
+        return
+    
+    if(any(x["id"] == info[1] for x in user.vkGroups)):
+        update.message.reply_text(language.getLang(user.lang)["err_already_exists_url"], reply_markup = { "remove_keyboard" : True })
         return
 
     user.vkGroups.append( { "name" : info[0], "id" : info[1] } )
