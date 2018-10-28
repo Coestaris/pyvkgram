@@ -82,6 +82,38 @@ def unsubscribe(bot, update):
     update.message.reply_text(language.getLang(user.lang)["select_group"], reply_markup=reply_markup)
     user.currListening = 1
     db.store_user(user)
+    pass
+
+@send_typing_action
+def getPosts(bot, update):
+    user = db.get_user(update.message.chat_id)
+    
+    if(len(user.vkGroups) == 0):
+        update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"], reply_markup = { "remove_keyboard" : True })
+        return
+
+    parts = update.message.text.tolower().replace("/getposts").split(' ')
+
+    count = 5
+    offset = 0
+
+    if(len(parts) >= 2):
+        count = int(parts[0])
+        offset = int(parts[1])
+    elif(len(parts) == 1):
+        count = int(parts[0])
+
+    custom_keyboard = []
+    for group in user.vkGroups:
+        custom_keyboard.append([telegram.KeyboardButton(text="{} - {}".format(group["id"], group["name"]))])
+
+    user.getPosts = { "count" : count, "offset" : offset }
+    user.currListening = 2
+
+    db.store_user(user)
+
+    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+    update.message.reply_text(language.getLang(user.lang)["get_posts"].format(count), reply_markup=reply_markup)
 
     pass
 
@@ -89,30 +121,37 @@ def unsubscribe(bot, update):
 def textInput(bot, update):
     user = db.get_user(update.message.chat_id)
 
-    if(groupRe.search(update.message.text) and user.currListening == 1):
-
-        user.currListening = 0
-        db.store_user(user)
+    if(groupRe.search(update.message.text)):
 
         id = int(update.message.text.split('-')[0].strip())
         name = update.message.text.split('-')[1].strip()
         
         if(any(x["id"] == id for x in user.vkGroups)):
-            user.vkGroups = [x for x in user.vkGroups if x["id"] != id]
-            db.store_user(user)
             
-            bot.send_message(
-                chat_id = update.message.chat_id, 
-                text = language.getLang(user.lang)["succ_removed_url"].format(name, id), 
-                parse_mode = telegram.ParseMode.MARKDOWN,
-                reply_markup = { "remove_keyboard" : True })
+            if(user.currListening == 1):
+                
+                user.vkGroups = [x for x in user.vkGroups if x["id"] != id]
+                db.store_user(user)
+                bot.send_message(
+                    chat_id = update.message.chat_id, 
+                    text = language.getLang(user.lang)["succ_removed_url"].format(name, id), 
+                    parse_mode = telegram.ParseMode.MARKDOWN,
+                    reply_markup = { "remove_keyboard" : True })
+            
+            elif(user.currListening == 2):
+                bot.send_message(chat_id = update.message.chat_id, text = "getting {} posts from {}".format(user.getPosts["count"], id))
         else:
-
             update.message.reply_text(language.getLang(user.lang)["err_unknown_id"], reply_markup = { "remove_keyboard" : True })
             return
 
+        user.currListening = 0
+        db.store_user(user)
+
     else:
         return
+
+
+
 
 @send_typing_action
 def getGroups(bot, update):
@@ -128,8 +167,7 @@ def getGroups(bot, update):
             chat_id = update.message.chat_id, 
             text = text, 
             parse_mode = telegram.ParseMode.MARKDOWN,
-            reply_markup = { "remove_keyboard" : True })
-        
+            reply_markup = { "remove_keyboard" : True })   
         
 @send_typing_action
 def subscribe(bot, update):
@@ -186,6 +224,7 @@ def main():
     dp.add_handler(CommandHandler("subscribe", subscribe))
     dp.add_handler(CommandHandler("unsubscribe", unsubscribe))
     dp.add_handler(CommandHandler("getgroups", getGroups))
+    dp.add_handler(CommandHandler("getposts", getPosts))
 
     dp.add_handler(MessageHandler(Filters.text, textInput))
 
