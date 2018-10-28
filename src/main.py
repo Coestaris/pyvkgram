@@ -1,14 +1,16 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-import telegram
-
-import logging
 import json
-import dbUser
-
+import logging
 import re
-import db
-import language
+from datetime import datetime
+from functools import wraps
+
+import telegram
+from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
+
 import cfg
+import db
+import dbUser
+import language
 import vkcore
 
 urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
@@ -16,8 +18,6 @@ urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
 urlRePublicId = re.compile(r"^\d{4,}$", re.MULTILINE)
 groupRe = re.compile(r"^\d{4,} - .+$")
 
-from functools import wraps
-from telegram import ChatAction
 
 def send_action(action):
     def decorator(func):
@@ -30,9 +30,9 @@ def send_action(action):
     
     return decorator
 
-send_typing_action = send_action(ChatAction.TYPING)
-send_upload_video_action = send_action(ChatAction.UPLOAD_VIDEO)
-send_upload_photo_action = send_action(ChatAction.UPLOAD_PHOTO)
+send_typing_action = send_action(telegram.ChatAction.TYPING)
+send_upload_video_action = send_action(telegram.ChatAction.UPLOAD_VIDEO)
+send_upload_photo_action = send_action(telegram.ChatAction.UPLOAD_PHOTO)
 
 def loadCfg():
     with open('../cfg.json') as f:
@@ -49,6 +49,15 @@ def loadCfg():
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def send_post(bot, grName, grId, lang, id, post):
+    text = language.getLang(lang)["post_header"].format(grName, grId, datetime.utcfromtimestamp(post.date).strftime('%Y-%m-%d %H:%M:%S'), post.likeCount, post.commentsCount, post.repostsCount)
+    
+    if(post.text != ''):
+        text += "\n\n" + post.escapeText()
+
+    bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+    pass
 
 @send_typing_action
 def start(bot, update):
@@ -78,7 +87,7 @@ def unsubscribe(bot, update):
     for group in user.vkGroups:
         custom_keyboard.append([telegram.KeyboardButton(text="{} - {}".format(group["id"], group["name"]))])
 
-    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
     update.message.reply_text(language.getLang(user.lang)["select_group"], reply_markup=reply_markup)
     user.currListening = 1
     db.store_user(user)
@@ -92,16 +101,16 @@ def getPosts(bot, update):
         update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"], reply_markup = { "remove_keyboard" : True })
         return
 
-    parts = update.message.text.tolower().replace("/getposts").split(' ')
-
+    parts = [x for x in update.message.text.lower().replace("/getposts", "").strip().split(' ') if x != '']
     count = 5
     offset = 0
 
     if(len(parts) >= 2):
         count = int(parts[0])
         offset = int(parts[1])
-    elif(len(parts) == 1):
-        count = int(parts[0])
+    else:
+        if(len(parts) == 1):
+            count = int(parts[0])
 
     custom_keyboard = []
     for group in user.vkGroups:
@@ -112,7 +121,7 @@ def getPosts(bot, update):
 
     db.store_user(user)
 
-    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard)
+    reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
     update.message.reply_text(language.getLang(user.lang)["get_posts"].format(count), reply_markup=reply_markup)
 
     pass
@@ -139,7 +148,17 @@ def textInput(bot, update):
                     reply_markup = { "remove_keyboard" : True })
             
             elif(user.currListening == 2):
-                bot.send_message(chat_id = update.message.chat_id, text = "getting {} posts from {}".format(user.getPosts["count"], id))
+                
+                bot.send_message(chat_id = update.message.chat_id, text = language.getLang(user.lang)["getting_posts"].format(user.getPosts["count"], name, id), 
+                    parse_mode = telegram.ParseMode.MARKDOWN,
+                    reply_markup = { "remove_keyboard" : True })
+
+                posts = vkcore.get_posts(id, True, user.getPosts["count"], user.getPosts["offset"])
+                for post in posts:
+
+                    print(post.toDebugJSON())
+                    send_post(bot, name, id, user.lang, user.teleId, post)
+
         else:
             update.message.reply_text(language.getLang(user.lang)["err_unknown_id"], reply_markup = { "remove_keyboard" : True })
             return

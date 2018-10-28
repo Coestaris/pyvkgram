@@ -1,4 +1,5 @@
 import vk
+from posts import post
 
 def init(cfg):
     global api
@@ -20,4 +21,9 @@ def get_posts(grId, isGroup, count, offset):
         offset = offset
     )
 
+    posts = []
+    for x in response["items"]:
+        posts.append(post(x))
+
     print response
+    return posts
