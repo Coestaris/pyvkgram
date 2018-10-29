@@ -4,6 +4,7 @@
     "user_password" : "pass",
     "tg_token" : "token",
 
-    "timer_tick" : 60000,
-    "time_format" : ""
+    "timer_tick" : 60,
+    "time_format" : "",
+    "admins" : []
 }

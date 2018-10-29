@@ -1,6 +1,8 @@
 import re
+import os
 import telegram
 from datetime import datetime
+from time import time
 import random
 import json
 
@@ -16,6 +18,7 @@ urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https
 urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
 urlRePublicId = re.compile(r"^\d{4,}$", re.MULTILINE)
 groupRe = re.compile(r"^\d{4,} - .+$")
+bot = None
 
 send_typing_action = utils.send_action(telegram.ChatAction.TYPING)
 send_upload_video_action = utils.send_action(telegram.ChatAction.UPLOAD_VIDEO)
@@ -30,6 +33,8 @@ def send_post(bot, grName, grId, lang, id, post):
         post.commentsCount, 
         post.repostsCount)
     
+    print post.toDebugJSON()
+
     if(post.text != ''):
         text += "\n\n" + post.escapeText()
 
@@ -247,7 +252,7 @@ def subscribe(bot, update):
 @send_typing_action
 @utils.restricted
 def adm_db_dump(bot, update):
-    with open('db.json') as f:
+    with open(db.dbFileName) as f:
         data = json.load(f)
 
         bot.send_message(
@@ -257,6 +262,41 @@ def adm_db_dump(bot, update):
             reply_markup = { "remove_keyboard" : True })
     pass
 
+@send_typing_action
+@utils.restricted
+def adm_db_drop(bot, update):
+
+    os.remove(db.dbFileName)
+    db.reassign_db()
+    db.store_user(dbUser.dbUser(update.message.chat_id))
+
+    bot.send_message(
+        chat_id = update.message.chat_id, 
+        text = "Database dropped",
+        reply_markup = { "remove_keyboard" : True })
+    pass
+
+lastUpdate = db.get_time()
+if(lastUpdate == None):
+    lastUpdate = time()
+    db.store_time(lastUpdate)
+
 def interval_func():
-    print('tick')
+    global lastUpdate
+
+    for user in db.get_users():
+        for group in user.vkGroups:
+            posts = vkcore.get_posts(group["id"], True, 10, 0)
+            postsToSend = []
+            for post in posts:
+                if(post.date >= lastUpdate):
+                    postsToSend.append(post)
+            
+            for post in postsToSend:
+                send_post(bot, group["name"], group["id"], user.lang, user.teleId, post)
+    
+    lastUpdate = time()
+    db.store_time(lastUpdate)
+
+    print('Tick at {} ({})'.format(datetime.utcfromtimestamp(lastUpdate).strftime(cfg.globalCfg.time_format), lastUpdate))
     pass

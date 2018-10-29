@@ -22,6 +22,7 @@ def main():
 
     logger.log(logging.INFO, "Init tgcore...")
     updater = Updater(cfg.globalCfg.tg_token)
+    tgcore.bot = updater.bot
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", tgcore.start))
@@ -33,6 +34,7 @@ def main():
     
     #dp.add_handler(CommandHandler("adm_restart", getPosts))
     dp.add_handler(CommandHandler("adm_db_dump", tgcore.adm_db_dump))
+    dp.add_handler(CommandHandler("adm_db_drop", tgcore.adm_db_drop))
     #dp.add_handler(CommandHandler("adm_db_clear", getPosts))    
     #dp.add_handler(CommandHandler("adm_stat", getPosts))
 

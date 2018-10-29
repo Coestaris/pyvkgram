@@ -31,9 +31,8 @@ def restricted(func):
     @wraps(func)
     def wrapped(bot, update, *args, **kwargs):
         user_id = update.effective_user.id
-        user = db.get_user(update.message.chat_id)
         if user_id not in LIST_OF_ADMINS:
-            update.message.reply_text(language.getLang(user.lang)["err_not_allowed"].format(user_id))
+            update.message.reply_text(language.getLang("ru")["err_not_allowed"].format(user_id))
             return
         return func(bot, update, *args, **kwargs)
     return wrapped

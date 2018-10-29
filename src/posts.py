@@ -172,9 +172,9 @@ class videoAttachment(attachment):
         if('files' in info): self.files = info['files']
         else:  
             #self.files = { 'player' : info['player'] }
-            print info['player']
+            #print info['player']
             files = vkcore.get_video_direct_url(info['player'])
-            print files
+            #print files
 
     def toDebugJSON(self):
         return {
