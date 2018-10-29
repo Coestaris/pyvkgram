@@ -3,6 +3,9 @@ from enum import Enum
 
 class post:
     
+    def escapeFText(self):
+        return self.forwarded_text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+
     def escapeText(self):
         return self.text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
 
@@ -31,6 +34,24 @@ class post:
 
         if('comments' in input and 'count' in input['comments']): self.commentsCount = input['comments']['count']
         else: self.commentsCount = -1
+
+        if('copy_history' in input):
+            self.isForwarded = True
+
+            forward = input['copy_history'][0]
+
+            if('text' in forward): self.forwarded_text = forward['text']
+            else: self.forwarded_text = ''
+
+            if('attachments' in forward): 
+                if('attachments' in input):
+                    input['attachments'].append(forward['attachments'])
+                else:
+                    input.update( { 'attachments' : forward['attachments'] } )
+
+        else: 
+            self.forwarded_text = ''
+            self.isForwarded = False
 
         self.attachments = []
         if('attachments' in input and len(input['attachments']) != 0):
@@ -73,6 +94,7 @@ class post:
             "isAd" : self.isAd,
             "isPinned" : self.isPinned,
             #"postSource" : self.postSource,
+            "forwarded_text" : (self.forwarded_text[1:50] if len(self.forwarded_text) > 50 else self.forwarded_text) if self.forwarded_text != '' else "<empty>",
             "text" : (self.text[1:50] if len(self.text) > 50 else self.text) if self.text != '' else "<empty>",
             "attachments" : [x.toDebugJSON() for x in self.attachments],
             "likeCount" : self.likeCount,

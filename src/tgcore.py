@@ -32,12 +32,18 @@ def send_post(bot, grName, grId, lang, id, post):
         grName, 
         grId, 
         datetime.utcfromtimestamp(post.date).strftime(cfg.globalCfg.time_format), 
+        u'📌' if post.isPinned else ' ',
+        u'💰' if post.isAd else ' ',
+        u'➡️' if post.isForwarded else ' ',
         post.likeCount, 
         post.commentsCount, 
         post.repostsCount)
     
     if(post.text != ''):
         text += "\n\n" + post.escapeText()
+
+    if(post.forwarded_text != ''):
+        text += language.getLang(lang)["ori_post_text"].format(post.escapeFText())
 
     if(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.photo):
         

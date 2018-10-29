@@ -24,7 +24,6 @@ def get_video(owner, vidID, access_key):
 def get_video_direct_url(player_url):
     page = requests.get(player_url).content
     soup = BeautifulSoup(page, 'html.parser')
-
     #print soup.prettify()
 
     return [x.get('src') for x in soup.find_all('source')]
@@ -39,7 +38,6 @@ def get_posts(grId, isGroup, count, offset):
     )
 
     #print response
-
     posts = []
     for x in response["items"]:
         posts.append(post(x))
