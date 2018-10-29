@@ -147,9 +147,13 @@ class linkAttachment(attachment):
         }
 
 class videoAttachment(attachment):
-    
+
     def getUrl(self):
         return list(self.files.values())[-1]
+
+    def isYouTube(self):
+        url = self.getUrl()
+        return url.startswith("https://www.youtube.com") or url.startswith("www.youtube.com") or url.startswith("youtu.be")
     
     def __init__(self, input):
         self.type =  attachmentTypes.video
@@ -171,9 +175,9 @@ class videoAttachment(attachment):
 
         if('files' in info): self.files = info['files']
         else:  
-            #self.files = { 'player' : info['player'] }
+            self.files = { 'player' : info['player'] }
             #print info['player']
-            files = vkcore.get_video_direct_url(info['player'])
+            #files = vkcore.get_video_direct_url(info['player'])
             #print files
 
     def toDebugJSON(self):

@@ -4,7 +4,7 @@ import re
 import os
 import telegram
 from datetime import datetime
-from time import time
+from time import time, sleep
 import random
 import json
 
@@ -45,8 +45,16 @@ def send_post(bot, grName, grId, lang, id, post):
 
     elif(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.video):
 
-        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
-        bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
+        if(post.attachments[0].isYouTube()):
+            text += '\n' + post.attachments[0].getUrl()
+            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+
+        else:
+            #TODO!
+            text += language.getLang(lang)["post_video"].format(post.attachments[0].getUrl())
+            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+        #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
+        #bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
 
     elif(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.doc):
 
@@ -66,7 +74,12 @@ def send_post(bot, grName, grId, lang, id, post):
                 media_group.append(telegram.InputMediaPhoto(a.getUrl()["url"]))
            
             for a in [x for x in post.attachments if x.type == posts.attachmentTypes.video]:
-                media_group.append(telegram.InputMediaVideo(a.getUrl()))
+                if(a.isYouTube()):
+                    text += '\n' + a.getUrl()
+
+                else:                    
+                    text += language.getLang(lang)["post_video"].format(a.getUrl())
+                #media_group.append(telegram.InputMediaVideo(a.getUrl()))
            
             if(len(media_group) != 0):
 
@@ -112,7 +125,7 @@ def unsubscribe(bot, update):
     
     custom_keyboard = []
     for group in user.vkGroups:
-        custom_keyboard.append([telegram.KeyboardButton(text="{} - {}".format(group["id"], group["name"]))])
+        custom_keyboard.append([telegram.KeyboardButton(text=u"{} - {}".format(group["id"], group["name"]))])
 
     reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
     update.message.reply_text(language.getLang(user.lang)["select_group"], reply_markup=reply_markup)
@@ -263,7 +276,7 @@ def adm_db_dump(bot, update):
 
         bot.send_message(
             chat_id = update.message.chat_id, 
-            text = "```json{{\n{}```".format(json.dumps(data, sort_keys=True, indent=2)),
+            text = u"```json{{\n{}```".format(json.dumps(data, sort_keys=True, indent=2)),
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
     pass
@@ -292,6 +305,7 @@ def interval_func():
 
     for user in db.get_users():
         for group in user.vkGroups:
+            sleep(.5)
             posts = vkcore.get_posts(group["id"], True, 10, 0)
             postsToSend = []
             for post in posts:
