@@ -15,6 +15,7 @@ import db
 import utils
 import cfg
 import language
+import requests
 
 urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
 urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
@@ -84,7 +85,32 @@ def send_post(bot, grName, grId, lang, id, post):
             if(len(media_group) != 0):
 
                 bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
-                bot.send_media_group(chat_id = id, media = media_group)
+                try:
+                    bot.send_media_group(chat_id=id, media=media_group)
+                except:
+                    print('unable to send media group, trying to download files to disk...')
+
+                    parentDir = os.path.dirname(os.path.realpath(__file__))
+                    os.mkdir(u"{}/{}".format(parentDir, "download_data"))
+
+                    counter = 0
+                    for photoToDownload in [x.media for x in media_group]:
+                        
+                        r = requests.get(photoToDownload)
+                        with open(u'{}/{}/tmp{}.jpg'.format(parentDir, "download_data", counter), 'wb') as f:  
+                            f.write(r.content)
+                            counter += 1
+                        
+                    counter = 0
+                    nmedia_group = []
+                    for photoToDownload in [x.media for x in media_group]:
+                        nmedia_group.append(telegram.InputMediaPhoto(open(u'{}/{}/tmp{}.jpg'.format(parentDir, "download_data", counter))))
+                        counter += 1
+
+                    try:
+                        bot.send_media_group(chat_id=id, media=nmedia_group)
+                    except Exception as ex:
+                        print(u'still cant send media group =c. {}'.format(ex.message))
             
             for a in [x for x in post.attachments if x.type == posts.attachmentTypes.doc]:
 
@@ -112,6 +138,8 @@ def help(bot, update):
     update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
 
 def errorHandler(bot, update, error):
+
+    print(error)
     user = db.get_user(update.message.chat_id)
     update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
 

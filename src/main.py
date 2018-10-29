@@ -45,7 +45,7 @@ def main():
     updater.start_polling()
 
     logger.log(logging.INFO, "Starting interval_func...")
-    utils.set_interval(tgcore.interval_func, cfg.globalCfg.timer_tick)
+    #utils.set_interval(tgcore.interval_func, cfg.globalCfg.timer_tick)
 
     logger.log(logging.INFO, "Going to loop...")
     updater.idle()
