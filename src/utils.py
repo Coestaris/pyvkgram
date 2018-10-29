@@ -47,5 +47,6 @@ def loadCfg():
             data["user_password"],
             data["tg_token"],
             data["timer_tick"],
-            data["time_format"])
+            data["time_format"],
+            data["timeZone"])
         return c

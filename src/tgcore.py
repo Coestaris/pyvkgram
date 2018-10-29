@@ -1,5 +1,8 @@
 #coding:utf-8
 
+#TODO: Polls
+#TODO: Settings: Header format, language, disable monitoring, disable id showing
+
 import re
 import os
 import telegram
@@ -31,7 +34,7 @@ def send_post(bot, grName, grId, lang, id, post):
     text = language.getLang(lang)["post_header"].format(
         grName, 
         grId, 
-        datetime.utcfromtimestamp(post.date).strftime(cfg.globalCfg.time_format), 
+        datetime.fromtimestamp(post.date + 3600 * cfg.globalCfg.time_zone).strftime(cfg.globalCfg.time_format), 
         u'📌' if post.isPinned else ' ',
         u'💰' if post.isAd else ' ',
         u'➡️' if post.isForwarded else ' ',
