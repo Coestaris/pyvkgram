@@ -1,0 +1,1 @@
+tail -f /root/.pm2/logs/main-out.log
