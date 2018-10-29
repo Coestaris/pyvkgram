@@ -1,3 +1,5 @@
+#coding:utf-8
+
 import re
 import os
 import telegram
@@ -139,7 +141,7 @@ def getPosts(bot, update):
 
     custom_keyboard = []
     for group in user.vkGroups:
-        custom_keyboard.append([telegram.KeyboardButton(text="{} - {}".format(group["id"], group["name"]))])
+        custom_keyboard.append([telegram.KeyboardButton(text=u"{} - {}".format(group["id"], group["name"]))])
 
     user.getPosts = { "count" : count, "offset" : offset }
     user.currListening = 2
@@ -203,7 +205,7 @@ def getGroups(bot, update):
     else:
         text = language.getLang(user.lang)["group_list"] + '\n'
         for group in user.vkGroups:
-            text += '- *{}* (ID: {})\n'.format(group["name"], group["id"])
+            text += u"- *{}* (ID: {})\n".format(group["name"], group["id"])
         
         bot.send_message(
             chat_id = update.message.chat_id, 
