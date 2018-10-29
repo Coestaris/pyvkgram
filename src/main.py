@@ -1,8 +1,8 @@
 import json
 import logging
+import random
 import re
 from datetime import datetime
-from functools import wraps
 
 import telegram
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
@@ -13,46 +13,19 @@ import dbUser
 import language
 import vkcore
 from posts import attachmentTypes
+import utils
 
 urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
 urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
 urlRePublicId = re.compile(r"^\d{4,}$", re.MULTILINE)
 groupRe = re.compile(r"^\d{4,} - .+$")
 
-
-def send_action(action):
-    def decorator(func):
-        @wraps(func)
-        def command_func(*args, **kwargs):
-            bot, update = args
-            bot.send_chat_action(chat_id=update.message.chat_id, action=action)
-            func(bot, update, **kwargs)
-        return command_func
-    
-    return decorator
-
-send_typing_action = send_action(telegram.ChatAction.TYPING)
-send_upload_video_action = send_action(telegram.ChatAction.UPLOAD_VIDEO)
-send_upload_photo_action = send_action(telegram.ChatAction.UPLOAD_PHOTO)
-
-def loadCfg():
-    with open('../cfg.json') as f:
-        data = json.load(f)
-        c = cfg.cfg(
-            data["appId"],
-            data["user_login"],
-            data["user_password"],
-            data["tg_token"],
-            data["timer_tick"],
-            data["time_format"])
-        return c
-
-
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+send_typing_action = utils.send_action(telegram.ChatAction.TYPING)
+send_upload_video_action = utils.send_action(telegram.ChatAction.UPLOAD_VIDEO)
+send_upload_photo_action = utils.send_action(telegram.ChatAction.UPLOAD_PHOTO)
 
 def send_post(bot, grName, grId, lang, id, post):
-    text = language.getLang(lang)["post_header"].format(grName, grId, datetime.utcfromtimestamp(post.date).strftime('%Y-%m-%d %H:%M:%S'), post.likeCount, post.commentsCount, post.repostsCount)
+    text = language.getLang(lang)["post_header"].format(grName, grId, datetime.utcfromtimestamp(post.date).strftime(cfg.globalCfg.time_format), post.likeCount, post.commentsCount, post.repostsCount)
     
     if(post.text != ''):
         text += "\n\n" + post.escapeText()
@@ -112,7 +85,8 @@ def help(bot, update):
     update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
 
 def error(bot, update, error):
-    logger.warning('Update "%s" caused error "%s"', update, error)
+    user = db.get_user(update.message.chat_id)
+    update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
 
 @send_typing_action
 def unsubscribe(bot, update):
@@ -195,6 +169,8 @@ def textInput(bot, update):
                 posts = vkcore.get_posts(id, True, user.getPosts["count"], user.getPosts["offset"])
                 for post in posts:
                     send_post(bot, name, id, user.lang, user.teleId, post)
+            else:
+                update.message.reply_text(random.choice(language.getLang(user.lang)["group_text_reply"]), reply_markup = { "remove_keyboard" : True })
 
         else:
             update.message.reply_text(language.getLang(user.lang)["err_unknown_id"], reply_markup = { "remove_keyboard" : True })
@@ -204,10 +180,8 @@ def textInput(bot, update):
         db.store_user(user)
 
     else:
+        update.message.reply_text(random.choice(language.getLang(user.lang)["text_reply"]), reply_markup = { "remove_keyboard" : True })
         return
-
-
-
 
 @send_typing_action
 def getGroups(bot, update):
@@ -267,12 +241,38 @@ def subscribe(bot, update):
         parse_mode = telegram.ParseMode.MARKDOWN,
         reply_markup = { "remove_keyboard" : True })
 
+
+@send_typing_action
+@utils.restricted
+def adm_db_dump(bot, update):
+    with open('db.json') as f:
+        data = json.load(f)
+
+        bot.send_message(
+            chat_id = update.message.chat_id, 
+            text = "```json{{\n{}```".format(json.dumps(data, sort_keys=True, indent=2)),
+            parse_mode = telegram.ParseMode.MARKDOWN,
+            reply_markup = { "remove_keyboard" : True })
+    pass
+
+def interval_func():
+    
+    pass
+
 def main():
-    cfg = loadCfg()
-    vkcore.init(cfg)
+    
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
-    updater = Updater(cfg.tg_token)
+    logger.log(logging.INFO, "Loading configs...")
+    cfg.globalCfg = utils.loadCfg()
+    utils.LIST_OF_ADMINS = cfg.globalCfg.admins
 
+    logger.log(logging.INFO, "Init vkcore...")
+    vkcore.init(cfg.globalCfg)
+
+    logger.log(logging.INFO, "Init tgcore...")
+    updater = Updater(cfg.globalCfg.tg_token)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
@@ -281,16 +281,24 @@ def main():
     dp.add_handler(CommandHandler("unsubscribe", unsubscribe))
     dp.add_handler(CommandHandler("getgroups", getGroups))
     dp.add_handler(CommandHandler("getposts", getPosts))
+    
+    #dp.add_handler(CommandHandler("adm_restart", getPosts))
+    dp.add_handler(CommandHandler("adm_db_dump", adm_db_dump))
+    #dp.add_handler(CommandHandler("adm_db_clear", getPosts))    
+    #dp.add_handler(CommandHandler("adm_stat", getPosts))
 
     dp.add_handler(MessageHandler(Filters.text, textInput))
-
     dp.add_error_handler(error)
 
     logger.log(logging.INFO, "Starting polling...")
     updater.start_polling()
 
+    logger.log(logging.INFO, "Starting interval_func...")
+    utils.set_interval(interval_func, cfg.globalCfg.timer_tick)
+
     logger.log(logging.INFO, "Going to loop...")
     updater.idle()
+
 
 if __name__ == '__main__':
     main()

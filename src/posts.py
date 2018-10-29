@@ -45,8 +45,9 @@ class post:
                     self.attachments.append(docAttachment(attachment["doc"]))
 
                 elif(attachment['type'] == 'video'):
-                    #self.attachments.append(videoAttachment(attachment["video"]))
+                    self.attachments.append(videoAttachment(attachment["video"]))
                     pass
+
                 elif(attachment['type'] == 'audio'):
                     print('Unknown format {}'.format(attachment['type']))
                 elif(attachment['type'] == 'graffiti'):
@@ -169,7 +170,11 @@ class videoAttachment(attachment):
         else: self.description = ""
 
         if('files' in info): self.files = info['files']
-        else: self.files = { 'player' : info['player'] }
+        else:  
+            #self.files = { 'player' : info['player'] }
+            print info['player']
+            files = vkcore.get_video_direct_url(info['player'])
+            print files
 
     def toDebugJSON(self):
         return {

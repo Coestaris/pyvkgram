@@ -8,8 +8,6 @@ def init(cfg):
     
     storage = vk.AuthSession(app_id = cfg.appId, user_login = cfg.login, user_password = cfg.password, scope = 0x111111)
     api = vk.API(storage, v = "5.35")
-
-    print storage.access_token
     pass
 
 def get_group_info(grId):
@@ -21,9 +19,6 @@ def get_video(owner, vidID, access_key):
     global api
     request = "{}_{}_{}".format(owner, vidID, access_key)
     response = api.video.get(videos =  request, count = 1, offset = 0)
-
-    #print response["items"][0]
-
     return response["items"][0]
 
 def get_video_direct_url(player_url):
@@ -32,10 +27,7 @@ def get_video_direct_url(player_url):
 
     #print soup.prettify()
 
-    return soup.find('source').get('src')
-
-
-print(get_video_direct_url("https://vk.com/video_ext.php?oid=239202396&id=169933357&hash=c05231377a965a37&__ref=vk.api&api_hash=1540752451106b9df1662c26d224_GE3TINZZGY2TENI%27"))
+    return [x.get('src') for x in soup.find_all('source')]
 
 
 def get_posts(grId, isGroup, count, offset):
