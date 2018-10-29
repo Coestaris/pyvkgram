@@ -104,8 +104,8 @@ class docAttachment(attachment):
         if('url' in input): self.url = input['url'] 
         else: self.url = ""
 
-        if('type' in input): self.type = input['type'] 
-        else: self.type = ""
+        if('type' in input): self.docType = input['type'] 
+        else: self.docType = ""
 
         if('title' in input): self.title = input['title'] 
         else: self.title = ""

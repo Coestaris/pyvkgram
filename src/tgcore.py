@@ -33,8 +33,6 @@ def send_post(bot, grName, grId, lang, id, post):
         post.commentsCount, 
         post.repostsCount)
     
-    print post.toDebugJSON()
-
     if(post.text != ''):
         text += "\n\n" + post.escapeText()
 
@@ -51,7 +49,10 @@ def send_post(bot, grName, grId, lang, id, post):
     elif(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.doc):
 
         bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
-        bot.send_document(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, document = post.attachments[0].url, filename = post.attachments[0].title)
+        if(post.attachments[0].ext == 'gif'):
+            bot.send_animation(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, animation = post.attachments[0].url, filename = post.attachments[0].title)
+        else:
+            bot.send_document(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, document = post.attachments[0].url, filename = post.attachments[0].title)
     else:
 
         if(len(post.attachments) != 0):
@@ -73,7 +74,10 @@ def send_post(bot, grName, grId, lang, id, post):
             for a in [x for x in post.attachments if x.type == posts.attachmentTypes.doc]:
 
                 bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
-                bot.send_document(chat_id = id, document = a.url, filename = a.title)
+                if(a.ext == 'gif'):
+                    bot.send_animation(chat_id = id, animation = a.url)
+                else:
+                    bot.send_document(chat_id = id, document = a.url, filename = a.title)
 
         bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
         bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)

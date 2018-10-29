@@ -12,7 +12,7 @@ User = Query()
 def reassign_db():
     global userTable
     global timeTable
-    global Query
+    global User
 
     userTable = TinyDB(dbFileName).table('users')
     timeTable = TinyDB(dbFileName).table('time')
