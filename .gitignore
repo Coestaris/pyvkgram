@@ -1,6 +1,7 @@
 cfg.json
 db.json
 .vscode/sftp.json
+.vscode/.ropeproject/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

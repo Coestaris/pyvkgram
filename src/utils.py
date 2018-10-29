@@ -1,20 +1,10 @@
 import json
-import logging
-import random
-import re
 import threading
-from datetime import datetime
 from functools import wraps
 
-import telegram
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
-
 import cfg
-import db
-import dbUser
 import language
-import vkcore
-from posts import attachmentTypes
+import db
 
 LIST_OF_ADMINS = []
 
