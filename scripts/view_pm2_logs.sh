@@ -1,1 +1,1 @@
-tail -f /root/.pm2/logs/main-out.log
+pm2 logs --lines 100

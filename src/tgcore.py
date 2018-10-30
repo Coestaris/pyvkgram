@@ -4,11 +4,12 @@
 #TODO: Settings: Header format, language, disable monitoring, disable id showing
 #Show id-hasttag, show likes, show sttatus bar, show-date, post-link
 
+import time
+import psutil
 import re
 import os
 import telegram
 from datetime import datetime
-from time import time, sleep
 import random
 import json
 
@@ -21,6 +22,8 @@ import utils
 import cfg
 import language
 import requests
+
+startTime = time.time()
 
 urlRePublicFull = re.compile(r"((?<=^https:\/\/vk\.com\/club)\d{4,})|((?<=^https:\/\/vk\.com\/public)\d{4,})$", re.MULTILINE)
 urlRePublic = re.compile(r"(?<=^https:\/\/vk\.com\/)(.+)$", re.MULTILINE)
@@ -138,7 +141,7 @@ def send_post(bot, grName, grId, lang, id, post):
 @send_typing_action
 def start(bot, update):
     if(not db.has_user(update.message.chat_id)):
-        db.store_user(dbUser.dbUser(update.message.chat_id))
+        db.store_user(dbUser.dbUser(teleid=update.message.chat_id, debugName=update.message.from_user.first_name))
 
     user = db.get_user(update.message.chat_id)
     update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
@@ -164,7 +167,7 @@ def callback_inline(bot, update):
     if(not isinstance(markup, telegram.InlineKeyboardMarkup)):
         bot.delete_message(chat_id=query.message.chat_id, message_id=query.message.message_id)
     else:
-        bot.edit_message_text(chat_id=query.message.chat_id, text="Выбирите кнопку из списка", reply_markup = markup, message_id=query.message.message_id)
+        bot.edit_message_reply_markup(chat_id=query.message.chat_id, reply_markup = markup, message_id=query.message.message_id)
 
 def errorHandler(bot, update, error):
 
@@ -330,6 +333,24 @@ def subscribe(bot, update):
 
 @send_typing_action
 @utils.restricted
+def adm_stat(bot, update):
+
+    pid = os.getpid()
+    py = psutil.Process(pid)
+    memoryUse = py.memory_info()[0]/2.**30 
+
+    bot.send_message(
+        chat_id = update.message.chat_id, 
+        text = u"*CPU*: {}_%_\n\n*FMem*: {}_GB_\n\n*Mem*: {}\n\n*Server uptime*: {}\n\n*Bot uptime*: {}"
+            .format(psutil.cpu_percent(), memoryUse, psutil.virtual_memory(), 
+                utils.display_time(time.time() - psutil.boot_time(), 5), 
+                utils.display_time(time.time() - py.create_time(), 5)),
+        parse_mode = telegram.ParseMode.MARKDOWN,
+        reply_markup = { "remove_keyboard" : True })
+    pass
+
+@send_typing_action
+@utils.restricted
 def adm_db_dump(bot, update):
     with open(db.dbFileName) as f:
         data = json.load(f)
@@ -357,7 +378,7 @@ def adm_db_drop(bot, update):
 
 lastUpdate = db.get_time()
 if(lastUpdate == None):
-    lastUpdate = time()
+    lastUpdate = time.time()
     db.store_time(lastUpdate)
 
 def interval_func():
@@ -370,14 +391,14 @@ def interval_func():
         for group in user.vkGroups:
           
             posts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0)
-            sleep(cfg.globalCfg.between_request_delay)
+            time.sleep(cfg.globalCfg.between_request_delay)
 
             while(posts[-1].date  >= lastUpdate):
                 postsRerecieved += cfg.globalCfg.posts_to_get
                 nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
 
                 #print [x.toDebugJSON() for x in nposts]
-                sleep(cfg.globalCfg.between_request_delay)
+                time.sleep(cfg.globalCfg.between_request_delay)
                 posts += nposts
             
             totalPosts += len(posts)
@@ -391,7 +412,7 @@ def interval_func():
                 send_post(bot, group["name"], group["id"], user.lang, user.teleId, post)
                 postsSent += 1
     
-    lastUpdate = time()
+    lastUpdate = time.time()
     db.store_time(lastUpdate)
 
     print('Tick at {} ({}). Total: {}. PostRe: {}. Sent: {}'.format(
