@@ -8,8 +8,7 @@ class dbUser:
 
         self.ignoreMonitoring = ignoreMonitoring
         self.postFormat = postFormat
-        # 0 - default
-        # 1 - minimal
+
 
     def toDict(self):
         a =  {
@@ -25,7 +24,7 @@ class dbUser:
 
     @staticmethod
     def parse(dict):
-        return dbUser(
+        user = dbUser(
             dict["teleId"],
             dict["vkGroups"],
             dict["lang"],
@@ -34,3 +33,13 @@ class dbUser:
             dict["ignoreMonitoring"],
             dict["postFormat"]
         )
+
+        if('show_id' not in user.postFormat):
+            user.postFormat = {
+                'show_id' : True,
+                'show_date' : True,
+                'show_likes' : True,
+                'show_status' : True
+            }
+        
+        return user

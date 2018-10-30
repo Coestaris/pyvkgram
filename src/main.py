@@ -1,6 +1,6 @@
 import logging
 
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
+from telegram.ext import CommandHandler, Filters, MessageHandler, Updater, CallbackQueryHandler
 
 import cfg
 import language
@@ -26,6 +26,7 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", tgcore.start))
+    dp.add_handler(CommandHandler("settings", tgcore.settings))
     dp.add_handler(CommandHandler("help", tgcore.help))
     dp.add_handler(CommandHandler("subscribe", tgcore.subscribe))
     dp.add_handler(CommandHandler("unsubscribe", tgcore.unsubscribe))
@@ -37,6 +38,8 @@ def main():
     dp.add_handler(CommandHandler("adm_db_drop", tgcore.adm_db_drop))
     #dp.add_handler(CommandHandler("adm_db_clear", getPosts))    
     #dp.add_handler(CommandHandler("adm_stat", getPosts))
+
+    dp.add_handler(CallbackQueryHandler(tgcore.callback_inline))
 
     dp.add_handler(MessageHandler(Filters.text, tgcore.textInputHandler))
     dp.add_error_handler(tgcore.errorHandler)

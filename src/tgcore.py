@@ -2,7 +2,7 @@
 
 #TODO: Polls
 #TODO: Settings: Header format, language, disable monitoring, disable id showing
-#Show id-hasttag, show likes, show sttatus bar, show-date, 
+#Show id-hasttag, show likes, show sttatus bar, show-date, post-link
 
 import re
 import os
@@ -12,6 +12,7 @@ from time import time, sleep
 import random
 import json
 
+import menuHandler
 import dbUser
 import vkcore
 import posts
@@ -147,11 +148,28 @@ def help(bot, update):
     user = db.get_user(update.message.chat_id)
     update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
 
+@send_typing_action
+def settings(bot, update):
+    user = db.get_user(update.message.chat_id)
+    bot.send_message(chat_id=user.teleId, text="Выбирите кнопку из списка", reply_markup=menuHandler.get_main_menu(user, bot))
+    pass
+
+def callback_inline(bot, update):
+    query = update.callback_query
+
+    user = db.get_user(query.message.chat_id)
+    act = query.data
+
+    bot.edit_message_text(chat_id=query.message.chat_id, text="Выбирите кнопку из списка", reply_markup = menuHandler.get_menu(act, user, bot), message_id=query.message.message_id)
+
 def errorHandler(bot, update, error):
 
     print(error)
-    user = db.get_user(update.message.chat_id)
-    update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
+    try:
+        user = db.get_user(update.message.chat_id)
+        update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
+    except:
+        pass
 
 @send_typing_action
 def unsubscribe(bot, update):
