@@ -41,12 +41,14 @@ def loadCfg():
     with open('../cfg.json') as f:
         data = json.load(f)
         c = cfg.cfg(
-            data["appId"],
-            data["admins"],
-            data["user_login"],
-            data["user_password"],
-            data["tg_token"],
-            data["timer_tick"],
-            data["time_format"],
-            data["timeZone"])
+            appId=data["appId"],
+            admins=data["admins"],
+            login=data["user_login"],
+            password=data["user_password"],
+            tg_token=data["tg_token"],
+            timer_tick=data["timer_tick"],
+            time_format=data["time_format"],
+            timeZone=data["time_zone"],
+            posts_to_get=data["posts_per_request"],
+            between_request_delay=data["between_requests_delay"])
         return c

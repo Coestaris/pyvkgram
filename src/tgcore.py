@@ -2,6 +2,7 @@
 
 #TODO: Polls
 #TODO: Settings: Header format, language, disable monitoring, disable id showing
+#Show id-hasttag, show likes, show sttatus bar, show-date, 
 
 import re
 import os
@@ -255,7 +256,7 @@ def getGroups(bot, update):
     else:
         text = language.getLang(user.lang)["group_list"] + '\n'
         for group in user.vkGroups:
-            text += u"- *{}* (ID: {})\n".format(group["name"], group["id"])
+            text += language.getLang(user.lang)["get_groups"].format(group["name"], group["id"])
         
         bot.send_message(
             chat_id = update.message.chat_id, 
@@ -339,11 +340,23 @@ if(lastUpdate == None):
 
 def interval_func():
     global lastUpdate
+    totalPosts = 0
+    postsRerecieved = 0
+    postsSent = 0
 
     for user in db.get_users():
         for group in user.vkGroups:
-            sleep(.5)
-            posts = vkcore.get_posts(group["id"], True, 10, 0)
+          
+            posts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0)
+            sleep(cfg.globalCfg.between_request_delay)
+
+            while(posts[-1].date  >= lastUpdate):
+                postsRerecieved += cfg.globalCfg.posts_to_get
+                posts.append(vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0))
+                sleep(cfg.globalCfg.between_request_delay)
+            
+            totalPosts += len(posts)
+
             postsToSend = []
             for post in posts:
                 if(post.date >= lastUpdate):
@@ -351,9 +364,15 @@ def interval_func():
             
             for post in postsToSend:
                 send_post(bot, group["name"], group["id"], user.lang, user.teleId, post)
+                postsSent += 1
     
     lastUpdate = time()
     db.store_time(lastUpdate)
 
-    print('Tick at {} ({})'.format(datetime.utcfromtimestamp(lastUpdate).strftime(cfg.globalCfg.time_format), lastUpdate))
+    print('Tick at {} ({}). Total: {}. PostRe: {}. Sent: {}'.format(
+        datetime.utcfromtimestamp(lastUpdate).strftime(cfg.globalCfg.time_format), 
+        lastUpdate,
+        totalPosts,
+        postsRerecieved,
+        postsSent))
     pass

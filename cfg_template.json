@@ -5,6 +5,8 @@
     "tg_token" : "token",
     "timer_tick" : 60,
     "time_format" : "",
-    "timeZone" : 0,
-    "admins" : []
+    "time_zone" : 0,
+    "admins" : [],
+    "posts_per_request" : 2,
+    "between_requests_delay" : 3
 }
