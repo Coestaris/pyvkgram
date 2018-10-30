@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 
 def init(cfg):
     global api
-    vk.logger.setLevel('DEBUG')
-    storage = vk.AuthSession(app_id = cfg.appId, user_login = cfg.login, user_password = cfg.password, scope = 'offline')
+    #vk.logger.setLevel('DEBUG')
+    storage = vk.AuthSession(app_id = cfg.appId, user_login = cfg.login, user_password = cfg.password, scope = 0x111111)
     api = vk.API(storage, v = "5.35")
     pass
 

@@ -1,5 +1,8 @@
-import vkcore
 from enum import Enum
+from time import sleep
+
+import vkcore
+import cfg
 
 class post:
     
@@ -184,6 +187,7 @@ class videoAttachment(attachment):
         id = input['id']
         owner_id = input['owner_id']
 
+        sleep(cfg.globalCfg.between_request_delay)
         info = vkcore.get_video(owner_id, id, access_key)
         
         if('duration' in info): self.duration = info['duration']
