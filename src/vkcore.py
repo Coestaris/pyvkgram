@@ -31,6 +31,8 @@ def get_video_direct_url(player_url):
 
 def get_posts(grId, isGroup, count, offset):
     global api
+    #print "Get groups call"
+
     response = api.wall.get(
         owner_id = (-1 if isGroup else 1) * grId,
         count = count,

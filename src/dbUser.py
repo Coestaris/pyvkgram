@@ -1,5 +1,5 @@
 class dbUser:
-    def __init__(self, teleid, vkGroups = [], lang = "ru", currListening = 0, getPosts = {}, ignoreMonitoring = False, postFormat = 0):
+    def __init__(self, teleid, vkGroups = [], lang = "ru", currListening = 0, getPosts = {}, ignoreMonitoring = False, postFormat = {}):
         self.teleId = teleid
         self.vkGroups = vkGroups
         self.lang = lang
@@ -39,7 +39,8 @@ class dbUser:
                 'show_id' : True,
                 'show_date' : True,
                 'show_likes' : True,
-                'show_status' : True
+                'show_status' : True,
+                'show_link' : True
             }
         
         return user

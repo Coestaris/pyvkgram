@@ -160,7 +160,11 @@ def callback_inline(bot, update):
     user = db.get_user(query.message.chat_id)
     act = query.data
 
-    bot.edit_message_text(chat_id=query.message.chat_id, text="Выбирите кнопку из списка", reply_markup = menuHandler.get_menu(act, user, bot), message_id=query.message.message_id)
+    markup = menuHandler.get_menu(act, user, bot)
+    if(not isinstance(markup, telegram.InlineKeyboardMarkup)):
+        bot.delete_message(chat_id=query.message.chat_id, message_id=query.message.message_id)
+    else:
+        bot.edit_message_text(chat_id=query.message.chat_id, text="Выбирите кнопку из списка", reply_markup = markup, message_id=query.message.message_id)
 
 def errorHandler(bot, update, error):
 
@@ -370,8 +374,11 @@ def interval_func():
 
             while(posts[-1].date  >= lastUpdate):
                 postsRerecieved += cfg.globalCfg.posts_to_get
-                posts.append(vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0))
+                nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
+
+                #print [x.toDebugJSON() for x in nposts]
                 sleep(cfg.globalCfg.between_request_delay)
+                posts += nposts
             
             totalPosts += len(posts)
 
