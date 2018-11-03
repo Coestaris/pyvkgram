@@ -16,6 +16,9 @@ intervals = (
     ('seconds', 1),
     )
 
+def escape_string(input):
+    return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+
 def display_time(seconds, granularity=2):
     result = []
 
@@ -25,7 +28,7 @@ def display_time(seconds, granularity=2):
             seconds -= value * count
             if value == 1:
                 name = name.rstrip('s')
-            result.append("{} {}".format(value, name))
+            result.append("{0:.3f} {1}".format(value, name))
     return ', '.join(result[:granularity])
 
 def set_interval(func, sec):

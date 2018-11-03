@@ -17,6 +17,11 @@ def main():
     cfg.globalCfg = utils.loadCfg()
     utils.LIST_OF_ADMINS = cfg.globalCfg.admins
 
+    logger.log(logging.INFO, "[CFG]. Timeout: %s", cfg.globalCfg.timer_tick)
+    logger.log(logging.INFO, "[CFG]. Between request delay: %s", cfg.globalCfg.between_request_delay)
+    logger.log(logging.INFO, "[CFG]. Time zone: %s", cfg.globalCfg.time_zone)
+    logger.log(logging.INFO, "[CFG]. Posts per requst: %s", cfg.globalCfg.posts_to_get)
+
     logger.log(logging.INFO, "Init vkcore...")
     vkcore.init(cfg.globalCfg)
 
@@ -55,7 +60,7 @@ def main():
     updater.start_polling()
 
     logger.log(logging.INFO, "Starting interval_func...")
-    utils.set_interval(tgcore.interval_func, cfg.globalCfg.timer_tick)
+    #utils.set_interval(tgcore.interval_func, cfg.globalCfg.timer_tick)
 
     logger.log(logging.INFO, "Going to loop...")
     updater.idle()

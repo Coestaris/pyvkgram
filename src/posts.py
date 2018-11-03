@@ -3,14 +3,15 @@ from time import sleep
 
 import vkcore
 import cfg
+import utils
 
 class post:
     
     def escapeFText(self):
-        return self.forwarded_text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+        return utils.escape_string(self.forwarded_text)
 
     def escapeText(self):
-        return self.text.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+        return utils.escape_string(self.text)
 
     def __init__(self, input):
         
