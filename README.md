@@ -25,10 +25,13 @@ sudo apt-get install nodejs npm # Если требуется установит
 npm i pm2
 ```
 
-Копирование исходников проекта
+Копирование исходников проекта и задача нужных параметров
 ```bash
 git clone https://github.com/Coestaris/pyvkgram
-cd pyvkgram/scripts
+cd pyvkgram
+cp cfg_template.json cfg.json #Создание конфигурационного файла с файла-шаблона
+vim cfg.json #Установка параметров (telegram token, vk tokens, delays)
+cd scripts 
 ```
 
 Для запуска используйте скрипт ```./pystart.py```. 
