@@ -376,7 +376,6 @@ def subscribe(bot, update):
     except Exception as ex:
         notify_admin(ex)
 
-
 @send_typing_action
 @utils.restricted
 def adm_stat(bot, update):
@@ -384,12 +383,17 @@ def adm_stat(bot, update):
     try:
         pid = os.getpid()
         py = psutil.Process(pid)
-        memoryUse = py.memory_info()[0]/2.**30 
+        mem = psutil.virtual_memory()
 
         bot.send_message(
             chat_id = update.message.chat_id, 
-            text = u"*CPU*: {}_%_\n\n*FMem*: {}_GB_\n\n*Mem*: {}\n\n*Server uptime*: {}\n\n*Bot uptime*: {}"
-                .format(psutil.cpu_percent(), memoryUse, psutil.virtual_memory(), 
+            text = u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}"
+                .format(psutil.cpu_percent(), 
+                    utils.sizeof_fmt(mem.total), 
+                    utils.sizeof_fmt(mem.available), 
+                    utils.sizeof_fmt(mem.free), 
+                    utils.sizeof_fmt(mem.used), 
+                    mem.percent, 
                     utils.display_time(time.time() - psutil.boot_time(), 5), 
                     utils.display_time(time.time() - py.create_time(), 5)),
             parse_mode = telegram.ParseMode.MARKDOWN,

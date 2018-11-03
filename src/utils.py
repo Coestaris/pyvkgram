@@ -8,18 +8,26 @@ import db
 
 LIST_OF_ADMINS = []
 
-intervals = (
-    ('weeks', 604800),  # 60 * 60 * 24 * 7
-    ('days', 86400),    # 60 * 60 * 24
-    ('hours', 3600),    # 60 * 60
-    ('minutes', 60),
-    ('seconds', 1),
-    )
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f %s%s" % (num, 'Yi', suffix)
 
 def escape_string(input):
     return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
 
 def display_time(seconds, granularity=2):
+    
+    intervals = (
+        ('weeks', 604800),  # 60 * 60 * 24 * 7
+        ('days', 86400),    # 60 * 60 * 24
+        ('hours', 3600),    # 60 * 60
+        ('minutes', 60),
+        ('seconds', 1),
+    )
+    
     result = []
 
     for name, count in intervals:
@@ -28,7 +36,7 @@ def display_time(seconds, granularity=2):
             seconds -= value * count
             if value == 1:
                 name = name.rstrip('s')
-            result.append("{0:.3f} {1}".format(value, name))
+            result.append("{0:.0f} {1}".format(value, name))
     return ', '.join(result[:granularity])
 
 def set_interval(func, sec):
