@@ -2,6 +2,9 @@
 
 import telegram
 import db
+import random
+import dbUser
+import os
 
 def get_main_menu(user, bot):
     return telegram.InlineKeyboardMarkup([
@@ -67,5 +70,21 @@ def get_menu(act, user, bot):
             [telegram.InlineKeyboardButton(text="Назад", callback_data="btn_tomain")]
         ])
 
-    if(act == "btn_close"):
+    if(act == "btn_close" or act == "adm_drop_cancel"):
         return {}
+
+    if(act == "adm_drop"):
+        os.remove(db.dbFileName)
+        db.reassign_db()
+        db.store_user(dbUser.dbUser(user.teleId))
+        return {}
+
+def confirm_drop():
+    array = []
+    count = random.randint(3, 5)
+    yes = random.randint(1, count) - 1
+    for a in range(0, count):
+        array.append([telegram.InlineKeyboardButton(text=u"%s" % "drop" if a == yes else "cancel",
+            callback_data= ("adm_drop" if a == yes else "adm_drop_cancel"))])
+
+    return telegram.InlineKeyboardMarkup(array)

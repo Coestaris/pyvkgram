@@ -12,4 +12,31 @@ class cfg:
         self.posts_to_get = posts_to_get
         self.between_request_delay = between_request_delay
 
+class stat:
+    def __init__(self, vkRequests = {}, postAttachments = {}, tgRequests = {}, postSent = 0, forcedRequests = 0):
+        self.vkRequests = vkRequests
+        self.tgRequests = tgRequests
+        self.postAttachments = postAttachments
+        self.postSent = postSent
+        self.forcedRequests = forcedRequests
+
+    def toDict(self):
+        return {
+            "vkRequests" : self.vkRequests,
+            "tgRequests" : self.tgRequests, 
+            "postAttachments" : self.postAttachments,
+            "postSent" : self.postSent,
+            "forcedRequests" : self.forcedRequests
+        }
+
+    @staticmethod
+    def parse(dict):
+        a = stat(
+            dict["vkRequests"],
+            dict["tgRequests"],
+            dict["postAttachments"],
+            dict["postSent"],
+            dict["forcedRequests"],
+        )
+
 globalCfg = cfg()

@@ -2,6 +2,7 @@ import logging
 
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater, CallbackQueryHandler
 
+import postSender
 import cfg
 import language
 import vkcore
@@ -39,17 +40,14 @@ def main():
     dp.add_handler(CommandHandler("getposts", tgcore.getPosts))
     
     #dp.add_handler(CommandHandler("adm_restart", getPosts))
-    dp.add_handler(CommandHandler("adm_db_dump", tgcore.adm_db_dump))
-    dp.add_handler(CommandHandler("db_dump", tgcore.adm_db_dump))
+    dp.add_handler(CommandHandler("adm_dbdump", tgcore.adm_db_dump))
     dp.add_handler(CommandHandler("dump", tgcore.adm_db_dump))
 
     dp.add_handler(CommandHandler("adm_stat", tgcore.adm_stat))
     dp.add_handler(CommandHandler("stat", tgcore.adm_stat))
 
-
-    dp.add_handler(CommandHandler("adm_db_drop", tgcore.adm_db_drop))
-    #dp.add_handler(CommandHandler("adm_db_clear", getPosts))    
-    #dp.add_handler(CommandHandler("adm_stat", getPosts))
+    dp.add_handler(CommandHandler("adm_dbdrop", tgcore.adm_db_drop))
+    dp.add_handler(CommandHandler("drop", tgcore.adm_db_drop))
 
     dp.add_handler(CallbackQueryHandler(tgcore.callback_inline))
 
@@ -60,7 +58,7 @@ def main():
     updater.start_polling()
 
     logger.log(logging.INFO, "Starting interval_func...")
-    utils.set_interval(tgcore.interval_func, cfg.globalCfg.timer_tick)
+    utils.set_interval(postSender.interval_func, cfg.globalCfg.timer_tick)
 
     logger.log(logging.INFO, "Going to loop...")
     updater.idle()

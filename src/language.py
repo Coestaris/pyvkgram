@@ -51,7 +51,13 @@ u"""Бот для автоматического репоста постов с 
             "post_video" : u"\n\n====Post video: [click here]({})(embeeded will be soon)===",
 
             "server_error" : u"Произошла серверная ошибка😢😢",
-            "post_header" : u"Posted by *{}* (ID: #g{})\nat _{}_.{}{}{}\n❤️ {} | 💬 {} | 📢 {}",
+            "post_header" : u"Posted by *{}*",
+            
+            "post_header_id" : "(ID: #g{})",
+            "post_header_likes" : "\n❤️ {} | 💬 {} | 📢 {}",
+            "post_header_at" : "\nat _{}_",
+            "post_header_status" : "\n{}{}{}",
+
 
             "group_text_reply" : [ 
                 u"И зачем ты мне прислал эту группу?", 
