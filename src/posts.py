@@ -14,7 +14,10 @@ class post:
         return utils.escape_string(self.text)
 
     def __init__(self, input):
-        
+
+        if('id' in input): self.id = input['id']
+        else: self.id = -1
+
         if('from_id' in input): self.from_id = input['from_id']
         else: self.from_id = -1
 

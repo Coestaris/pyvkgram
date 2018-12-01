@@ -39,6 +39,7 @@ class dbUser:
         if('show_id' not in user.postFormat):
             user.postFormat = {
                 'show_id' : True,
+                'show_autor' : True,
                 'show_date' : True,
                 'show_likes' : True,
                 'show_status' : True,

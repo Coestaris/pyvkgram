@@ -7,7 +7,7 @@ import cfg
 dbFileName = 'db.json'
 
 userTable = TinyDB(dbFileName).table('users')
-utilsTable = TinyDB(dbFileName).table('time')
+utilsTable = TinyDB(dbFileName).table('utils')
 User = Query()
 
 def reassign_db():
@@ -16,7 +16,7 @@ def reassign_db():
     global User
 
     userTable = TinyDB(dbFileName).table('users')
-    utilsTable = TinyDB(dbFileName).table('time')
+    utilsTable = TinyDB(dbFileName).table('utils')
     User = Query()
 
 def has_user(teleId):
@@ -30,7 +30,7 @@ def store_user(user):
 
 def store_stat(stat):
     global utilsTable
-    userTable.update(stat.toDict())
+    utilsTable.update(stat.toDict())
 
 def get_stat():
     global utilsTable

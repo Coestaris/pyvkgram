@@ -17,34 +17,48 @@ import utils
 from posts import attachmentTypes 
 import vkcore
 
-def getText(grName, grId, id, post, lang):
-    text = language.getLang(lang)["post_header"].format()    
-    pass
+def getText(grName, grId, post, user):
+    lang = language.getLang(user.lang)
 
-def send_post(bot, grName, grId, lang, id, post):
-    maxCaptionLength = 200
-
-    text = language.getLang(lang)["post_header"].format(
-        grName, 
-        grId, 
-        datetime.fromtimestamp(post.date + 3600 * cfg.globalCfg.time_zone).strftime(cfg.globalCfg.time_format), 
-        u'📌' if post.isPinned else ' ',
-        u'💰' if post.isAd else ' ',
-        u'➡️' if post.isForwarded else ' ',
-        post.likeCount, 
-        post.commentsCount, 
-        post.repostsCount)
+    text = u""
+    if(user.postFormat["show_autor"]):
+        text += lang["post_header"].format(utils.escape_string(grName, True))
+        if(user.postFormat["show_id"]): text += lang["post_header_id"].format(grId)
     
+        if(user.postFormat["show_link"]): text += lang["post_header_link"].format(grId, post.id)
+
+    if(user.postFormat["show_date"]):
+        text += u'\n' + lang["post_header_at"].format(datetime.fromtimestamp(post.date + 3600 * cfg.globalCfg.time_zone).strftime(cfg.globalCfg.time_format))
+    
+    if(user.postFormat["show_status"]):
+        text += u'\n' + lang["post_header_likes"].format(
+            post.likeCount, 
+            post.commentsCount, 
+            post.repostsCount)
+
+    if(user.postFormat["show_status"]):
+        text += u'\n' + lang["post_header_status"].format(
+            u'📌' if post.isPinned else ' ',
+            u'💰' if post.isAd else ' ',
+            u'➡️' if post.isForwarded else ' ')
+
     if(post.text != ''):
-        text += "\n\n" + post.escapeText()
+        text += u"\n\n" + post.escapeText()
 
     if(post.forwarded_text != ''):
         text += language.getLang(lang)["ori_post_text"].format(post.escapeFText())
 
+    return text
+
+def send_post(bot, grName, grId, post, user):
+    maxCaptionLength = 200
+    text = getText(grName, grId, post, user)
+    id = user.teleId
+
     if(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.photo):
         utils.incAttachments("photo", 1)
         
-        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
+        bot.send_chat_action(chat_id= id, action=telegram.ChatAction.UPLOAD_PHOTO)
         if(len(text) <= maxCaptionLength):
             bot.send_photo(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, photo = post.attachments[0].getUrl()['url'] )
 
@@ -62,7 +76,7 @@ def send_post(bot, grName, grId, lang, id, post):
 
         else:
             #TODO!
-            text += language.getLang(lang)["post_video"].format(post.attachments[0].getUrl())
+            text += language.getLang(user.lang)["post_video"].format(post.attachments[0].getUrl())
             bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
 
             #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
@@ -97,7 +111,7 @@ def send_post(bot, grName, grId, lang, id, post):
                     text += '\n' + a.getUrl()
 
                 else:                    
-                    text += language.getLang(lang)["post_video"].format(a.getUrl())
+                    text += language.getLang(user.lang)["post_video"].format(a.getUrl())
                 #media_group.append(telegram.InputMediaVideo(a.getUrl()))
            
             if(len(media_group) != 0):
@@ -157,8 +171,8 @@ def notify_admin(ex):
         tgcore.bot.send_message(
             chat_id=admin,
             text="*Bot error!*\n\n_{}_\n\n{}".format(
-                utils.escape_string(ex.__str__()), 
-                utils.escape_string(traceback.format_exc())), 
+                utils.escape_string(ex.__str__(), False, True), 
+                utils.escape_string(traceback.format_exc(), False, False)), 
             parse_mode = telegram.ParseMode.MARKDOWN)
     pass
 
@@ -201,7 +215,7 @@ def interval_func():
                         postsToSend.append(post)
                 
                 for post in postsToSend:
-                    send_post(tgcore.bot, group["name"], group["id"], user.lang, user.teleId, post)
+                    send_post(tgcore.bot, group["name"], group["id"], post, user)
                     postsSent += 1
     except Exception as ex:
         notify_admin(ex)

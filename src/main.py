@@ -26,6 +26,9 @@ def main():
 
     logger.log(logging.INFO, "Loading statistics...")
     cfg.globalStat = db.get_stat()
+    if(cfg.globalStat is None):
+        cfg.globalStat = cfg.stat()
+        db.store_stat(cfg.globalStat)
     
     logger.log(logging.INFO, "Init vkcore...")
     vkcore.reinit(0)

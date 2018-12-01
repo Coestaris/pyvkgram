@@ -188,7 +188,7 @@ def textInputHandler(bot, update):
                     cfg.globalStat.postSent += len(posts) 
 
                     for post in posts:
-                        postSender.send_post(bot, name, id, user.lang, user.teleId, post)
+                        postSender.send_post(bot, name, id, post, user)
                 else:
                     update.message.reply_text(random.choice(language.getLang(user.lang)["group_text_reply"]), reply_markup = { "remove_keyboard" : True })
 
@@ -288,8 +288,8 @@ def adm_stat(bot, update):
         bot.send_message(
             chat_id = update.message.chat_id, 
             text = (u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}" +
-            u"\n\n*Posts Sent*: {}\n*Post reRecived*: {}\n*Post attachments*:\n{}" +
-            u"\n*VK Requests*:\n {}\n*Telegram calls*:\n{}")
+            u"\n\n*Posts Sent*: {}\n*Post reRecived*: {}" +
+            u"\n*Post attachments*: {}\n*VK Requests*: {}\n*Telegram calls*: {}")
                 .format(psutil.cpu_percent(), 
                     utils.sizeof_fmt(mem.total), 
                     utils.sizeof_fmt(mem.available), 
@@ -301,9 +301,9 @@ def adm_stat(bot, update):
                     
                     cfg.globalStat.postSent,
                     cfg.globalStat.forcedRequests,
-                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.postAttachments.items())]),
-                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.vkRequests.items())]),
-                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.tgRequests.items())])),
+                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.postAttachments.items())]),
+                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.vkRequests.items())]),
+                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.tgRequests.items())])),
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
     

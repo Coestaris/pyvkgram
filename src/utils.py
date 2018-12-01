@@ -15,8 +15,10 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f %s%s" % (num, 'Yi', suffix)
 
-def escape_string(input):
-    return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+def escape_string(input, isBold=False, isItalic=False):
+    if(isBold): return input.replace("*", "\\*")
+    elif(isItalic): return input.replace("_", "\\_")
+    else: return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
 
 def display_time(seconds, granularity=2):
     
