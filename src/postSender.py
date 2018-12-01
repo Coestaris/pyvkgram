@@ -200,8 +200,8 @@ def interval_func():
                 time.sleep(cfg.globalCfg.between_request_delay)
 
                 while(posts[-1].date  >= lastUpdate):
-                    postsRerecieved += 1
                     nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
+                    postsRerecieved += len(nposts)
 
                     #print [x.toDebugJSON() for x in nposts]
                     time.sleep(cfg.globalCfg.between_request_delay)
@@ -220,6 +220,7 @@ def interval_func():
     except Exception as ex:
         notify_admin(ex)
 
+    cfg.globalStat.postRecieved += totalPosts
     cfg.globalStat.postSent += postsSent
     cfg.globalStat.forcedRequests += postsRerecieved
 

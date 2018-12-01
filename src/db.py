@@ -7,16 +7,24 @@ import cfg
 dbFileName = 'db.json'
 
 userTable = TinyDB(dbFileName).table('users')
-utilsTable = TinyDB(dbFileName).table('utils')
+timeTable = TinyDB(dbFileName).table('time')
+statTable = TinyDB(dbFileName).table('stat')
 User = Query()
 
 def reassign_db():
+    cfg.globalStat = cfg.stat()
+
     global userTable
-    global utilsTable
+    global timeTable
     global User
 
     userTable = TinyDB(dbFileName).table('users')
-    utilsTable = TinyDB(dbFileName).table('utils')
+    timeTable = TinyDB(dbFileName).table('time')
+    statTable = TinyDB(dbFileName).table('stat')
+
+    timeTable.insert({ "time" : 0, })
+    statTable.insert(cfg.globalStat.toDict())
+
     User = Query()
 
 def has_user(teleId):
@@ -29,28 +37,30 @@ def store_user(user):
     userTable.insert(user.toDict())
 
 def store_stat(stat):
-    global utilsTable
-    utilsTable.update(stat.toDict())
+    global statTable
+    statTable.purge()
+    statTable.insert(stat.toDict())
 
 def get_stat():
-    global utilsTable
-    l = utilsTable.all()
+    global statTable
+    l = statTable.all()
     if(len(l) == 0):
         return None
     else:
-        return cfg.stat(l[0])
+        return cfg.stat.parse(l[0])
 
 def get_users():
     global userTable
     return [dbUser.dbUser.parse(x) for x in userTable.all()]
 
 def store_time(time):
-    global utilsTable
-    utilsTable.update({'time': time})
+    global timeTable
+    timeTable.purge()
+    timeTable.insert({'time': time})
 
 def get_time():
-    global utilsTable
-    l = utilsTable.all()
+    global timeTable
+    l = timeTable.all()
     if(len(l) == 0):
         return None
     else:
@@ -61,13 +71,13 @@ def get_user(teleId):
     return dbUser.dbUser.parse(userTable.search(User.teleId == teleId)[0])
 
 def store_ccn(ccn):
-    global utilsTable
-    utilsTable.update( {'cnn': ccn} ) 
+    global timeTable
+    timeTable.update( {'cnn': ccn} ) 
 
 #cycleCredentialNumber
 def get_ccn():
-    global utilsTable
-    l = utilsTable.all()
+    global timeTable
+    l = timeTable.all()
     if(len(l) == 0):
         return None
     else:

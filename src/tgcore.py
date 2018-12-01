@@ -186,6 +186,7 @@ def textInputHandler(bot, update):
 
                     posts = vkcore.get_posts(id, True, user.getPosts["count"], user.getPosts["offset"])
                     cfg.globalStat.postSent += len(posts) 
+                    cfg.globalStat.postRecieved += len(posts)
 
                     for post in posts:
                         postSender.send_post(bot, name, id, post, user)
@@ -217,7 +218,8 @@ def getGroups(bot, update):
         else:
             text = language.getLang(user.lang)["group_list"] + '\n'
             for group in user.vkGroups:
-                text += language.getLang(user.lang)["get_groups"].format(group["name"], group["id"])
+                text += language.getLang(user.lang)["get_groups"].format(
+                    utils.escape_string(group["name"], True), group["id"])
             
             bot.send_message(
                 chat_id = update.message.chat_id, 
@@ -288,8 +290,8 @@ def adm_stat(bot, update):
         bot.send_message(
             chat_id = update.message.chat_id, 
             text = (u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}" +
-            u"\n\n*Posts Sent*: {}\n*Post reRecived*: {}" +
-            u"\n*Post attachments*: {}\n*VK Requests*: {}\n*Telegram calls*: {}")
+            u"\n\n*Posts Sent*: {}\n*Posts recieved*: {}\n*Posts reRecieved*: {}" +
+            u"\n\n*Post attachments*: {}\n\n*VK Requests*: {}\n\n*Telegram calls*: {}")
                 .format(psutil.cpu_percent(), 
                     utils.sizeof_fmt(mem.total), 
                     utils.sizeof_fmt(mem.available), 
@@ -298,12 +300,12 @@ def adm_stat(bot, update):
                     mem.percent, 
                     utils.display_time(time.time() - psutil.boot_time(), 5), 
                     utils.display_time(time.time() - py.create_time(), 5),
-                    
                     cfg.globalStat.postSent,
+                    cfg.globalStat.postRecieved,
                     cfg.globalStat.forcedRequests,
-                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.postAttachments.items())]),
-                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.vkRequests.items())]),
-                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), v) for k, v in iter(cfg.globalStat.tgRequests.items())])),
+                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
+                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
+                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
     
@@ -316,6 +318,8 @@ def adm_db_dump(bot, update):
     utils.incStatTG("adm_dump")
 
     try:
+        db.store_stat(cfg.globalStat)
+        
         with open(db.dbFileName) as f:
             data = json.load(f)
 
