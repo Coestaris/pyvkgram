@@ -16,6 +16,8 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f %s%s" % (num, 'Yi', suffix)
 
 def escape_string(input, isBold=False, isItalic=False):
+    input = u"{}".format(input)
+    
     if(isBold): return input.replace("*", "\\*")
     elif(isItalic): return input.replace("_", "\\_")
     else: return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
@@ -87,7 +89,9 @@ def loadCfg():
 
 def incStat(key, array, c):
     if(key in array):
-         array[key] += c
+        value = array[key]
+        array[key] = int(value) + c
+
     else: array[key] = c
 
 def incStatVK(key):
@@ -98,3 +102,4 @@ def incStatTG(key):
 
 def incAttachments(key, c):
     incStat(key, cfg.globalStat.postAttachments, c)
+
