@@ -4,6 +4,7 @@ import os
 import time
 import traceback
 from datetime import datetime
+import shutil
 
 import requests
 import telegram
@@ -13,6 +14,7 @@ import db
 import language
 import tgcore
 import utils
+from posts import attachmentTypes 
 import vkcore
 
 def getText(grName, grId, id, post, lang):
@@ -39,18 +41,20 @@ def send_post(bot, grName, grId, lang, id, post):
     if(post.forwarded_text != ''):
         text += language.getLang(lang)["ori_post_text"].format(post.escapeFText())
 
-    if(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.photo):
+    if(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.photo):
+        utils.incAttachments("photo", 1)
         
         bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
         if(len(text) <= maxCaptionLength):
             bot.send_photo(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, photo = post.attachments[0].getUrl()['url'] )
+
         else:
             bot.send_photo(chat_id = id, photo = post.attachments[0].getUrl()['url'] )
             bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
             bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
 
-
-    elif(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.video):
+    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.video):
+        utils.incAttachments("video", 1)
 
         if(post.attachments[0].isYouTube()):
             text += '\n' + post.attachments[0].getUrl()
@@ -60,10 +64,12 @@ def send_post(bot, grName, grId, lang, id, post):
             #TODO!
             text += language.getLang(lang)["post_video"].format(post.attachments[0].getUrl())
             bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
-        #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
-        #bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
 
-    elif(len(post.attachments) == 1 and post.attachments[0].type == posts.attachmentTypes.doc):
+            #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
+            #bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
+
+    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.doc):
+        utils.incAttachments("doc", 1)
 
         bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
         if(len(text) <= maxCaptionLength):
@@ -76,14 +82,17 @@ def send_post(bot, grName, grId, lang, id, post):
     else:
         
         if(len(post.attachments) != 0):
-            for a in [x for x in post.attachments if x.type == posts.attachmentTypes.link]:
+            for a in [x for x in post.attachments if x.type == attachmentTypes.link]:
                 text += "\n" + a.toMarkdown()
+                utils.incAttachments("link", 1)
 
             media_group = []
-            for a in [x for x in post.attachments if x.type == posts.attachmentTypes.photo]:
+            for a in [x for x in post.attachments if x.type == attachmentTypes.photo]:
                 media_group.append(telegram.InputMediaPhoto(a.getUrl()["url"]))
-           
-            for a in [x for x in post.attachments if x.type == posts.attachmentTypes.video]:
+                utils.incAttachments("photo", 1)
+
+            for a in [x for x in post.attachments if x.type == attachmentTypes.video]:
+                utils.incAttachments("video", 1)
                 if(a.isYouTube()):
                     text += '\n' + a.getUrl()
 
@@ -92,6 +101,7 @@ def send_post(bot, grName, grId, lang, id, post):
                 #media_group.append(telegram.InputMediaVideo(a.getUrl()))
            
             if(len(media_group) != 0):
+                utils.incAttachments("photo", len(media_group))
 
                 bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
                 try:
@@ -100,20 +110,24 @@ def send_post(bot, grName, grId, lang, id, post):
                     print('unable to send media group, trying to download files to disk...')
 
                     parentDir = os.path.dirname(os.path.realpath(__file__))
-                    os.mkdir(u"{}/{}".format(parentDir, "download_data"))
+                    
+                    dirName = u"{}/{}".format(parentDir, "download_data") 
+                    
+                    shutil.rmtree(dirName)
+                    os.mkdir(dirName)
 
                     counter = 0
                     for photoToDownload in [x.media for x in media_group]:
                         
                         r = requests.get(photoToDownload)
-                        with open(u'{}/{}/tmp{}.jpg'.format(parentDir, "download_data", counter), 'wb') as f:  
+                        with open(u'{}/tmp{}.jpg'.format(dirName, counter), 'wb') as f:  
                             f.write(r.content)
                             counter += 1
                         
                     counter = 0
                     nmedia_group = []
                     for photoToDownload in [x.media for x in media_group]:
-                        nmedia_group.append(telegram.InputMediaPhoto(open(u'{}/{}/tmp{}.jpg'.format(parentDir, "download_data", counter))))
+                        nmedia_group.append(telegram.InputMediaPhoto(open(u'{}/tmp{}.jpg'.format(dirName, counter))))
                         counter += 1
 
                     try:
@@ -121,8 +135,9 @@ def send_post(bot, grName, grId, lang, id, post):
                     except Exception as ex:
                         print(u'still cant send media group =c. {}'.format(ex.message))
             
-            for a in [x for x in post.attachments if x.type == posts.attachmentTypes.doc]:
-
+            for a in [x for x in post.attachments if x.type == attachmentTypes.doc]:
+                utils.incAttachments("doc", 1)
+                
                 bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
                 if(a.ext == 'gif'):
                     bot.send_animation(chat_id = id, animation = a.url)
@@ -135,7 +150,9 @@ def send_post(bot, grName, grId, lang, id, post):
 
 
 def notify_admin(ex):
-    print("Error: {}\nAdmin has been notifyed".format(ex))
+    utils.incStatTG("_error_notified")
+    
+    print("Error: {}\nAdmin has been notified".format(ex))
     for admin in cfg.globalCfg.admins:
         tgcore.bot.send_message(
             chat_id=admin,
@@ -150,7 +167,6 @@ lastUpdate = db.get_time()
 if(lastUpdate == None):
     lastUpdate = time.time()
     db.store_time(lastUpdate)
-
 
 def interval_func():
 
@@ -170,7 +186,7 @@ def interval_func():
                 time.sleep(cfg.globalCfg.between_request_delay)
 
                 while(posts[-1].date  >= lastUpdate):
-                    postsRerecieved += cfg.globalCfg.posts_to_get
+                    postsRerecieved += 1
                     nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
 
                     #print [x.toDebugJSON() for x in nposts]
@@ -190,6 +206,10 @@ def interval_func():
     except Exception as ex:
         notify_admin(ex)
 
+    cfg.globalStat.postSent += postsSent
+    cfg.globalStat.forcedRequests += postsRerecieved
+
     lastUpdate = updateStartTime
     db.store_time(lastUpdate)
+    db.store_stat(cfg.globalStat)
     pass

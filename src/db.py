@@ -28,6 +28,18 @@ def store_user(user):
     userTable.remove(User.teleId == user.teleId)
     userTable.insert(user.toDict())
 
+def store_stat(stat):
+    global utilsTable
+    userTable.update(stat.toDict())
+
+def get_stat():
+    global utilsTable
+    l = utilsTable.all()
+    if(len(l) == 0):
+        return None
+    else:
+        return cfg.stat(l[0])
+
 def get_users():
     global userTable
     return [dbUser.dbUser.parse(x) for x in userTable.all()]
@@ -42,7 +54,7 @@ def get_time():
     if(len(l) == 0):
         return None
     else:
-        return l[0].time
+        return l[0]["time"]
 
 def get_user(teleId):
     global userTable
@@ -50,7 +62,7 @@ def get_user(teleId):
 
 def store_ccn(ccn):
     global utilsTable
-    utilsTable.update({'cnn': ccn}) 
+    utilsTable.update( {'cnn': ccn} ) 
 
 #cycleCredentialNumber
 def get_ccn():
@@ -59,7 +71,7 @@ def get_ccn():
     if(len(l) == 0):
         return None
     else:
-        return l[0].ccn
+        return l[0]["ccn"]
 
 def manage_ccn():
     ccn = get_ccn()

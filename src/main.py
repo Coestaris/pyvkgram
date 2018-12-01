@@ -8,6 +8,7 @@ import language
 import vkcore
 import tgcore
 import utils
+import db
 
 def main():
     
@@ -23,8 +24,11 @@ def main():
     logger.log(logging.INFO, "[CFG]. Time zone: %s", cfg.globalCfg.time_zone)
     logger.log(logging.INFO, "[CFG]. Posts per requst: %s", cfg.globalCfg.posts_to_get)
 
+    logger.log(logging.INFO, "Loading statistics...")
+    cfg.globalStat = db.get_stat()
+    
     logger.log(logging.INFO, "Init vkcore...")
-    vkcore.init(cfg.globalCfg)
+    vkcore.reinit(0)
 
     logger.log(logging.INFO, "Init tgcore...")
     updater = Updater(cfg.globalCfg.tg_token)

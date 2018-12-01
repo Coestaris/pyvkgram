@@ -40,3 +40,4 @@ class stat:
         return a
 
 globalCfg = cfg()
+globalStat = stat()

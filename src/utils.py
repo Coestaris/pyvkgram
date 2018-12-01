@@ -82,3 +82,17 @@ def loadCfg():
             posts_to_get=data["posts_per_request"],
             between_request_delay=data["between_requests_delay"])
         return c
+
+def incStat(key, array, c):
+    if(key in array):
+         array[key] += c
+    else: array[key] = c
+
+def incStatVK(key):
+    incStat(key, cfg.globalStat.vkRequests, 1)
+
+def incStatTG(key):
+    incStat(key, cfg.globalStat.tgRequests, 1)
+
+def incAttachments(key, c):
+    incStat(key, cfg.globalStat.postAttachments, c)

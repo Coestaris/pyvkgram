@@ -34,7 +34,8 @@ send_upload_photo_action = utils.send_action(telegram.ChatAction.UPLOAD_PHOTO)
 
 @send_typing_action
 def start(bot, update):
-    
+    utils.incStatTG("start")
+
     try:
         if(not db.has_user(update.message.chat_id)):
             db.store_user(dbUser.dbUser(teleid=update.message.chat_id, debugName=update.message.from_user.first_name))
@@ -47,7 +48,8 @@ def start(bot, update):
 
 @send_typing_action
 def help(bot, update):
-    
+    utils.incStatTG("help")
+
     try:
         user = db.get_user(update.message.chat_id)
         update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
@@ -57,7 +59,8 @@ def help(bot, update):
 
 @send_typing_action
 def settings(bot, update):
-
+    utils.incStatTG("settings")
+    
     try:
         user = db.get_user(update.message.chat_id)
         bot.send_message(chat_id=user.teleId, text="Выбирите кнопку из списка", reply_markup=menuHandler.get_main_menu(user, bot))
@@ -66,7 +69,8 @@ def settings(bot, update):
         postSender.notify_admin(ex)
 
 def callback_inline(bot, update):
-
+    utils.incStatTG("_inline_callbacks")
+    
     try:
         query = update.callback_query
 
@@ -83,6 +87,8 @@ def callback_inline(bot, update):
         postSender.notify_admin(ex)
 
 def errorHandler(bot, update, error):
+    utils.incStatTG("_error")
+
     print(error)
     try:
         user = db.get_user(update.message.chat_id)
@@ -93,7 +99,8 @@ def errorHandler(bot, update, error):
 
 @send_typing_action
 def unsubscribe(bot, update):
-    
+    utils.incStatTG("unsubscribe")
+
     try:
         user = db.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
@@ -114,7 +121,8 @@ def unsubscribe(bot, update):
 
 @send_typing_action
 def getPosts(bot, update):
-    
+    utils.incStatTG("getPosts")
+
     try:
         user = db.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
@@ -149,6 +157,7 @@ def getPosts(bot, update):
 
 @send_typing_action
 def textInputHandler(bot, update):
+    utils.incStatTG("_textInput")
 
     try:
         user = db.get_user(update.message.chat_id)
@@ -176,6 +185,8 @@ def textInputHandler(bot, update):
                         reply_markup = { "remove_keyboard" : True })
 
                     posts = vkcore.get_posts(id, True, user.getPosts["count"], user.getPosts["offset"])
+                    cfg.globalStat.postSent += len(posts) 
+
                     for post in posts:
                         postSender.send_post(bot, name, id, user.lang, user.teleId, post)
                 else:
@@ -197,7 +208,8 @@ def textInputHandler(bot, update):
 
 @send_typing_action
 def getGroups(bot, update):
-    
+    utils.incStatTG("getGroups")
+
     try:
         user = db.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
@@ -217,7 +229,8 @@ def getGroups(bot, update):
         
 @send_typing_action
 def subscribe(bot, update):
-    
+    utils.incStatTG("subscribe")
+
     try:
         user = db.get_user(update.message.chat_id)
         url = update.message.text.replace("/subscribe", "").strip()
@@ -265,6 +278,7 @@ def subscribe(bot, update):
 @send_typing_action
 @utils.restricted
 def adm_stat(bot, update):
+    utils.incStatTG("adm_stat")
 
     try:
         pid = os.getpid()
@@ -273,7 +287,9 @@ def adm_stat(bot, update):
 
         bot.send_message(
             chat_id = update.message.chat_id, 
-            text = u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}"
+            text = (u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}" +
+            u"\n\n*Posts Sent*: {}\n*Post reRecived*: {}\n*Post attachments*:\n{}" +
+            u"\n*VK Requests*:\n {}\n*Telegram calls*:\n{}")
                 .format(psutil.cpu_percent(), 
                     utils.sizeof_fmt(mem.total), 
                     utils.sizeof_fmt(mem.available), 
@@ -281,7 +297,13 @@ def adm_stat(bot, update):
                     utils.sizeof_fmt(mem.used), 
                     mem.percent, 
                     utils.display_time(time.time() - psutil.boot_time(), 5), 
-                    utils.display_time(time.time() - py.create_time(), 5)),
+                    utils.display_time(time.time() - py.create_time(), 5),
+                    
+                    cfg.globalStat.postSent,
+                    cfg.globalStat.forcedRequests,
+                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.postAttachments.items())]),
+                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.vkRequests.items())]),
+                    "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k), v) for k, v in iter(cfg.globalStat.tgRequests.items())])),
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
     
@@ -291,6 +313,7 @@ def adm_stat(bot, update):
 @send_typing_action
 @utils.restricted
 def adm_db_dump(bot, update):
+    utils.incStatTG("adm_dump")
 
     try:
         with open(db.dbFileName) as f:
@@ -309,6 +332,7 @@ def adm_db_dump(bot, update):
 @send_typing_action
 @utils.restricted
 def adm_db_drop(bot, update):
+    utils.incStatTG("adm_drop")
 
     try:
         bot.send_message(
