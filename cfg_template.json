@@ -1,7 +1,11 @@
 {
     "appId" : "id",
-    "user_login" : "login",
-    "user_password" : "pass",
+    "credentials" : [
+        {
+            "login" : "login",
+            "password" : "pass"
+        }
+    ],
     "tg_token" : "token",
     "timer_tick" : 60,
     "time_format" : "",

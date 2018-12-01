@@ -1,12 +1,20 @@
 import vk
+import cfg
+import db
+
 from posts import post
 import requests
 from bs4 import BeautifulSoup
 
-def init(cfg):
+def reinit(cfg, number):
     global api
     #vk.logger.setLevel('DEBUG')
-    storage = vk.AuthSession(app_id = cfg.appId, user_login = cfg.login, user_password = cfg.password, scope = 0x111111)
+    storage = vk.AuthSession(
+        app_id = cfg.appId, 
+        user_login = cfg.credentials[number]["login"], 
+        user_password = cfg.credentials[number]["password"], 
+        scope = 0x111111)
+
     api = vk.API(storage, v = "5.35")
     pass
 
@@ -29,15 +37,28 @@ def get_video_direct_url(player_url):
     return [x.get('src') for x in soup.find_all('source')]
 
 
-def get_posts(grId, isGroup, count, offset):
+def get_posts(grId, isGroup, count, offset, reinited=False):
     global api
     #print "Get groups call"
 
-    response = api.wall.get(
-        owner_id = (-1 if isGroup else 1) * grId,
-        count = count,
-        offset = offset
-    )
+    try:
+
+        response = api.wall.get(
+            owner_id = (-1 if isGroup else 1) * grId,
+            count = count,
+            offset = offset
+        )
+
+    except:
+        
+        if(reinited):
+            print("After reiniting nothing fixed =c")
+            raise SystemExit
+
+        else:
+            print("WARNING!!! Some shit happened! Trying to reinit, to fix it...")
+            reinit(cfg.globalCfg, db.manage_ccn())
+            return get_posts(grId, isGroup, count, offset, True)
 
     #print response
     posts = []

@@ -74,8 +74,7 @@ def loadCfg():
         c = cfg.cfg(
             appId=data["appId"],
             admins=data["admins"],
-            login=data["user_login"],
-            password=data["user_password"],
+            credentials=data["credentials"],
             tg_token=data["tg_token"],
             timer_tick=data["timer_tick"],
             time_format=data["time_format"],

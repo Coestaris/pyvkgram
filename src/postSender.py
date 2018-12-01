@@ -1,3 +1,5 @@
+#coding: utf-8
+
 import os
 import time
 import traceback
@@ -9,14 +11,12 @@ import telegram
 import cfg
 import db
 import language
-import posts
 import tgcore
 import utils
 import vkcore
 
-def getText(grName, grId, id, post):
-    text = language.getLang(lang)["post_header"].format(
-    )    
+def getText(grName, grId, id, post, lang):
+    text = language.getLang(lang)["post_header"].format()    
     pass
 
 def send_post(bot, grName, grId, lang, id, post):
