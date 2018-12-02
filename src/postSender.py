@@ -71,7 +71,7 @@ def send_post(bot, grName, grId, post, user):
         utils.incAttachments("video", 1)
 
         if(post.attachments[0].isYouTube()):
-            text += '\n' + post.attachments[0].getUrl()
+            text += u'\n' + post.attachments[0].getUrl()
             bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
 
         else:

@@ -157,7 +157,7 @@ class docAttachment(attachment):
 class linkAttachment(attachment):
 
     def toMarkdown(self):
-        return "[{}]({})".format(self.title, self.url)
+        return u"[{}]({})".format(self.title, self.url)
 
     def __init__(self, input):
         self.type = attachmentTypes.link
