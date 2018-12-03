@@ -1,6 +1,6 @@
 (py)VKGammBot
 ==================
-> [@vkgrammbot](https://t.me/user?vkgrammbot)
+> [@vkgrammbot](https://t.me/vkgrammbot)
 
 Read in english [here](https://github.com/Coestaris/pyvkgram/blob/master/README_en.md)
 
