@@ -12,5 +12,6 @@
     "time_zone" : 0,
     "admins" : [],
     "posts_per_request" : 2,
-    "between_requests_delay" : 3
+    "between_requests_delay" : 3,
+    "sendFileTimeout" : 20
 }

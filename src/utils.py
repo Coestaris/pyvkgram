@@ -84,7 +84,8 @@ def loadCfg():
             time_format=data["time_format"],
             timeZone=data["time_zone"],
             posts_to_get=data["posts_per_request"],
-            between_request_delay=data["between_requests_delay"])
+            between_request_delay=data["between_requests_delay"],
+            sendFileTimeout=data["sendFileTimeout"])
         return c
 
 def incStat(key, array, c):
