@@ -42,10 +42,10 @@ def getText(grName, grId, post, user):
             u'➡️' if post.isForwarded else ' ')
 
     if(post.text != ''):
-        text += u"\n\n" + post.escapeText()
+        text += u"\n\n" + utils.makeVKLinks(post.escapeText())
 
     if(post.forwarded_text != ''):
-        text += lang["ori_post_text"].format(post.escapeFText())
+        text += lang["ori_post_text"].format(utils.makeVKLinks(post.escapeFText()))
 
     return text
 

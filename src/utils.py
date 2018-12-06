@@ -5,8 +5,10 @@ from functools import wraps
 import cfg
 import language
 import db
+import re
 
 LIST_OF_ADMINS = []
+linkRegex = re.compile(r"\\\[(.+)\|(.+)\]")
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -14,6 +16,30 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f %s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f %s%s" % (num, 'Yi', suffix)
+
+def replace_str_index(text, start_index=0, end_index=0, replacement=''):
+    return '%s%s%s'%(text[:start_index], replacement, text[start_index + end_index+1:])
+
+def makeVKLinks(input, toAdd='https://vk.com/{}'):
+    matches = re.finditer(linkRegex, input)
+    toReplace = []
+
+    print(input)
+    
+    for match in enumerate(matches):
+        start = match.start()
+        end = match.end()
+
+        link = input[match.start(0) : match.end(0) - match.start(0)]
+        caption = input[match.start(1) : match.end(1) - match.start(1)]
+
+        toReplace.append( (start, end, "({}{})[{}]".format(toAdd, link, caption)) )
+    
+    if(len(toReplace) != 0):
+        for toReplace in range(len(toReplace) - 1, 0, step=-1):
+            input = replace_str_index( input, toReplace[0], toReplace[1], toReplace[2] )
+
+    return input
 
 def escape_string(input, isBold=False, isItalic=False):
     input = u"{}".format(input)
