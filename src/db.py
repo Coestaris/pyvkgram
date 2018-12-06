@@ -8,6 +8,7 @@ dbFileName = 'db.json'
 
 userTable = TinyDB(dbFileName).table('users')
 timeTable = TinyDB(dbFileName).table('time')
+cnnTable = TinyDB(dbFileName).table('cnn')
 statTable = TinyDB(dbFileName).table('stat')
 User = Query()
 
@@ -21,6 +22,7 @@ def reassign_db():
     userTable = TinyDB(dbFileName).table('users')
     timeTable = TinyDB(dbFileName).table('time')
     statTable = TinyDB(dbFileName).table('stat')
+    cnnTable = TinyDB(dbFileName).table('cnn')
 
     timeTable.insert({ "time" : 0, })
     statTable.insert(cfg.globalStat.toDict())
@@ -71,13 +73,14 @@ def get_user(teleId):
     return dbUser.dbUser.parse(userTable.search(User.teleId == teleId)[0])
 
 def store_ccn(ccn):
-    global timeTable
-    timeTable.update( {'cnn': ccn} ) 
+    global cnnTable
+    cnnTable.purge()
+    cnnTable.insert( {'cnn': ccn} ) 
 
 #cycleCredentialNumber
 def get_ccn():
-    global timeTable
-    l = timeTable.all()
+    global cnnTable
+    l = statTable.all()
     if(len(l) == 0):
         return None
     else:
@@ -89,5 +92,4 @@ def manage_ccn():
     else: ccn += 1
 
     store_ccn(ccn)
-
     return ccn

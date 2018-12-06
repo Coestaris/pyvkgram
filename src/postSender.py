@@ -50,151 +50,156 @@ def getText(grName, grId, post, user):
     return text
 
 def send_post(bot, grName, grId, post, user):
-    maxCaptionLength = 200
-    text = getText(grName, grId, post, user)
-    id = user.teleId
+    try:
+        maxCaptionLength = 200
+        text = getText(grName, grId, post, user)
+        id = user.teleId
 
-    if(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.photo):
-        utils.incAttachments("photo", 1)
-        
-        bot.send_chat_action(chat_id= id, action=telegram.ChatAction.UPLOAD_PHOTO)
-        if(len(text) <= maxCaptionLength):
-            bot.send_photo(
-                chat_id = id, 
-                caption = text, 
-                parse_mode = telegram.ParseMode.MARKDOWN, 
-                photo = post.attachments[0].getUrl()['url'],
-                timeout=cfg.globalCfg.sendFileTimeout)
+        if(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.photo):
+            utils.incAttachments("photo", 1)
+            
+            bot.send_chat_action(chat_id= id, action=telegram.ChatAction.UPLOAD_PHOTO)
+            if(len(text) <= maxCaptionLength):
+                bot.send_photo(
+                    chat_id = id, 
+                    caption = text, 
+                    parse_mode = telegram.ParseMode.MARKDOWN, 
+                    photo = post.attachments[0].getUrl()['url'],
+                    timeout=cfg.globalCfg.sendFileTimeout)
+
+            else:
+                bot.send_photo(
+                    chat_id = id, 
+                    photo = post.attachments[0].getUrl()['url'], 
+                    timeout=cfg.globalCfg.sendFileTimeout)
+                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
+                bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+
+        elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.video):
+            utils.incAttachments("video", 1)
+
+            if(post.attachments[0].isYouTube()):
+                text += u'\n' + post.attachments[0].getUrl()
+                bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+
+            else:
+                #TODO!
+                text += language.getLang(user.lang)["post_video"].format(post.attachments[0].getUrl())
+                bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+
+                #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
+                #bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
+
+        elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.doc):
+            utils.incAttachments("doc", 1)
+
+            bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
+            if(len(text) <= maxCaptionLength):
+                bot.send_document(
+                    chat_id = id, 
+                    caption = text, 
+                    parse_mode = telegram.ParseMode.MARKDOWN, 
+                    document = post.attachments[0].url, 
+                    filename = post.attachments[0].title,
+                    timeout=cfg.globalCfg.sendFileTimeout)
+
+            else:
+                bot.send_document(
+                    chat_id = id, 
+                    document = post.attachments[0].url, 
+                    filename = post.attachments[0].title,
+                    timeout=cfg.globalCfg.sendFileTimeout)
+
+                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
+                bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
 
         else:
-            bot.send_photo(
-                chat_id = id, 
-                photo = post.attachments[0].getUrl()['url'], 
-                timeout=cfg.globalCfg.sendFileTimeout)
-            bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
-            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+            
+            if(len(post.attachments) != 0):
+                for a in [x for x in post.attachments if x.type == attachmentTypes.link]:
+                    text += "\n" + a.toMarkdown()
+                    utils.incAttachments("link", 1)
 
-    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.video):
-        utils.incAttachments("video", 1)
+                media_group = []
+                for a in [x for x in post.attachments if x.type == attachmentTypes.photo]:
+                    media_group.append(telegram.InputMediaPhoto(a.getUrl()["url"]))
+                    utils.incAttachments("photo", 1)
 
-        if(post.attachments[0].isYouTube()):
-            text += u'\n' + post.attachments[0].getUrl()
-            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+                for a in [x for x in post.attachments if x.type == attachmentTypes.video]:
+                    utils.incAttachments("video", 1)
+                    if(a.isYouTube()):
+                        text += '\n' + a.getUrl()
 
-        else:
-            #TODO!
-            text += language.getLang(user.lang)["post_video"].format(post.attachments[0].getUrl())
-            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+                    else:                    
+                        text += language.getLang(user.lang)["post_video"].format(a.getUrl())
+                    #media_group.append(telegram.InputMediaVideo(a.getUrl()))
+            
+                if(len(media_group) != 0):
+                    utils.incAttachments("photo", len(media_group))
 
-            #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
-            #bot.send_video(chat_id = id, caption = text, parse_mode = telegram.ParseMode.MARKDOWN, video = post.attachments[0].getUrl() )
-
-    elif(len(post.attachments) == 1 and post.attachments[0].type == attachmentTypes.doc):
-        utils.incAttachments("doc", 1)
-
-        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
-        if(len(text) <= maxCaptionLength):
-            bot.send_document(
-                chat_id = id, 
-                caption = text, 
-                parse_mode = telegram.ParseMode.MARKDOWN, 
-                document = post.attachments[0].url, 
-                filename = post.attachments[0].title,
-                timeout=cfg.globalCfg.sendFileTimeout)
-
-        else:
-            bot.send_document(
-                chat_id = id, 
-                document = post.attachments[0].url, 
-                filename = post.attachments[0].title,
-                timeout=cfg.globalCfg.sendFileTimeout)
-
-            bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
-            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
-
-    else:
-        
-        if(len(post.attachments) != 0):
-            for a in [x for x in post.attachments if x.type == attachmentTypes.link]:
-                text += "\n" + a.toMarkdown()
-                utils.incAttachments("link", 1)
-
-            media_group = []
-            for a in [x for x in post.attachments if x.type == attachmentTypes.photo]:
-                media_group.append(telegram.InputMediaPhoto(a.getUrl()["url"]))
-                utils.incAttachments("photo", 1)
-
-            for a in [x for x in post.attachments if x.type == attachmentTypes.video]:
-                utils.incAttachments("video", 1)
-                if(a.isYouTube()):
-                    text += '\n' + a.getUrl()
-
-                else:                    
-                    text += language.getLang(user.lang)["post_video"].format(a.getUrl())
-                #media_group.append(telegram.InputMediaVideo(a.getUrl()))
-           
-            if(len(media_group) != 0):
-                utils.incAttachments("photo", len(media_group))
-
-                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
-                try:
-                    bot.send_media_group(
-                        chat_id=id, 
-                        media=media_group,
-                        timeout=cfg.globalCfg.sendFileTimeout)
-
-                except:
-                    print('unable to send media group, trying to download files to disk...')
-
-                    parentDir = os.path.dirname(os.path.realpath(__file__))
-                    
-                    dirName = u"{}/{}".format(parentDir, "download_data") 
-                    
-                    shutil.rmtree(dirName)
-                    os.mkdir(dirName)
-
-                    counter = 0
-                    for photoToDownload in [x.media for x in media_group]:
-                        
-                        r = requests.get(photoToDownload)
-                        with open(u'{}/tmp{}.jpg'.format(dirName, counter), 'wb') as f:  
-                            f.write(r.content)
-                            counter += 1
-                        
-                    counter = 0
-                    nmedia_group = []
-                    for photoToDownload in [x.media for x in media_group]:
-                        nmedia_group.append(telegram.InputMediaPhoto(open(u'{}/tmp{}.jpg'.format(dirName, counter))))
-                        counter += 1
-
+                    bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_PHOTO)
                     try:
                         bot.send_media_group(
                             chat_id=id, 
-                            media=nmedia_group,
+                            media=media_group,
                             timeout=cfg.globalCfg.sendFileTimeout)
 
-                    except Exception as ex:
-                        print(u'still cant send media group =c. {}'.format(ex.message))
-            
-            for a in [x for x in post.attachments if x.type == attachmentTypes.doc]:
-                utils.incAttachments("doc", 1)
+                    except:
+                        print('unable to send media group, trying to download files to disk...')
+
+                        parentDir = os.path.dirname(os.path.realpath(__file__))
+                        
+                        dirName = u"{}/{}".format(parentDir, "download_data") 
+                        
+                        shutil.rmtree(dirName)
+                        os.mkdir(dirName)
+
+                        counter = 0
+                        for photoToDownload in [x.media for x in media_group]:
+                            
+                            r = requests.get(photoToDownload)
+                            with open(u'{}/tmp{}.jpg'.format(dirName, counter), 'wb') as f:  
+                                f.write(r.content)
+                                counter += 1
+                            
+                        counter = 0
+                        nmedia_group = []
+                        for photoToDownload in [x.media for x in media_group]:
+                            nmedia_group.append(telegram.InputMediaPhoto(open(u'{}/tmp{}.jpg'.format(dirName, counter))))
+                            counter += 1
+
+                        try:
+                            bot.send_media_group(
+                                chat_id=id, 
+                                media=nmedia_group,
+                                timeout=cfg.globalCfg.sendFileTimeout)
+
+                        except Exception as ex:
+                            print(u'still cant send media group =c. {}'.format(ex.message))
                 
-                bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
-                if(a.ext == 'gif'):
-                    bot.send_animation(
-                        chat_id = id, 
-                        animation = a.url,
-                        timeout=cfg.globalCfg.sendFileTimeout)
+                for a in [x for x in post.attachments if x.type == attachmentTypes.doc]:
+                    utils.incAttachments("doc", 1)
+                    
+                    bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_DOCUMENT)
+                    if(a.ext == 'gif'):
+                        bot.send_animation(
+                            chat_id = id, 
+                            animation = a.url,
+                            timeout=cfg.globalCfg.sendFileTimeout)
 
-                else:
-                    bot.send_document(
-                        chat_id = id, 
-                        document = a.url, 
-                        filename = a.title,
-                        timeout=cfg.globalCfg.sendFileTimeout)
+                    else:
+                        bot.send_document(
+                            chat_id = id, 
+                            document = a.url, 
+                            filename = a.title,
+                            timeout=cfg.globalCfg.sendFileTimeout)
 
-        bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
-        bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+            bot.send_chat_action(chat_id=id, action=telegram.ChatAction.TYPING)
+            bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
+            
+    except telegram.utils.request.TimedOut:
+        print "Timeout =c"
+
     pass
 
 
@@ -233,6 +238,9 @@ def interval_func():
             
                 posts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0)
                 time.sleep(cfg.globalCfg.between_request_delay)
+
+                if(len(posts) == 0):
+                    continue
 
                 while(posts[-1].date  >= lastUpdate):
                     nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
