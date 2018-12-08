@@ -91,9 +91,11 @@ def errorHandler(bot, update, error):
 
     print(error)
     try:
-        user = db.get_user(update.message.chat_id)
-        update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
-    
+        postSender.notify_admin_message(error)
+        if(update != None):
+            user = db.get_user(update.message.chat_id)
+            update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
+
     except Exception as ex:
         postSender.notify_admin(ex)
 

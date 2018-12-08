@@ -201,7 +201,18 @@ def send_post(bot, grName, grId, post, user):
         print "Timeout =c"
 
     pass
+ 
+def notify_admin_message(error):
+    utils.incStatTG("_error_notified")
 
+    print("Error: {}\nAdmin has been notified".format(error))
+    for admin in cfg.globalCfg.admins:
+        tgcore.bot.send_message(
+            chat_id=admin,
+            text="*Unhandled bot error (message type)!*\n\n{}".format(
+                utils.escape_string(error, False, False)), 
+            parse_mode = telegram.ParseMode.MARKDOWN)
+    pass
 
 def notify_admin(ex):
     utils.incStatTG("_error_notified")
@@ -210,7 +221,7 @@ def notify_admin(ex):
     for admin in cfg.globalCfg.admins:
         tgcore.bot.send_message(
             chat_id=admin,
-            text="*Bot error!*\n\n_{}_\n\n{}".format(
+            text="*Unhandled bot error!*\n\n_{}_\n\n{}".format(
                 utils.escape_string(ex.__str__(), False, True), 
                 utils.escape_string(traceback.format_exc(), False, False)), 
             parse_mode = telegram.ParseMode.MARKDOWN)

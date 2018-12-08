@@ -79,12 +79,15 @@ def store_ccn(ccn):
 
 #cycleCredentialNumber
 def get_ccn():
-    global cnnTable
-    l = statTable.all()
-    if(len(l) == 0):
-        return None
-    else:
-        return l[0]["ccn"]
+    
+    return 0
+    
+    #global cnnTable
+    #l = cnnTable.all()
+    #if(len(l) == 0):
+    #    return None
+    #else:
+    #    return l[0]["ccn"]
 
 def manage_ccn():
     ccn = get_ccn()

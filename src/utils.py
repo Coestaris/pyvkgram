@@ -8,7 +8,7 @@ import db
 import re
 
 LIST_OF_ADMINS = []
-linkRegex = re.compile(r"\\\[(.+)\|(.+)\]")
+linkRegex = re.compile(r"\\\[(.+?)\|(.+?)\]", re.MULTILINE)
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -18,27 +18,36 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f %s%s" % (num, 'Yi', suffix)
 
 def replace_str_index(text, start_index=0, end_index=0, replacement=''):
-    return '%s%s%s'%(text[:start_index], replacement, text[start_index + end_index+1:])
+    return u"{}{}{}".format(
+        text[:start_index], 
+        replacement, 
+        text[start_index + end_index:])
 
-def makeVKLinks(input, toAdd='https://vk.com/{}'):
+def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
     matches = re.finditer(linkRegex, input)
     toReplace = []
 
-    print(input)
+    #print(input)
     
-    for match in enumerate(matches):
+    for match in matches:
         start = match.start()
         end = match.end()
 
-        link = input[match.start(0) : match.end(0) - match.start(0)]
-        caption = input[match.start(1) : match.end(1) - match.start(1)]
+        link = match.group(1)
+        caption = match.group(2)
 
-        toReplace.append( (start, end, "({}{})[{}]".format(toAdd, link, caption)) )
-    
+        toReplace.append( (start, end, u"[{}]({})".format( caption, toAdd.format(link)) ) )
+
     if(len(toReplace) != 0):
-        for toReplace in range(len(toReplace) - 1, 0, step=-1):
-            input = replace_str_index( input, toReplace[0], toReplace[1], toReplace[2] )
 
+        #print toReplace
+
+        for tr in reversed(toReplace):
+            print tr
+            #input = replace_str_index( input, tr[0], tr[1], tr[2] )
+
+
+    print input
     return input
 
 def escape_string(input, isBold=False, isItalic=False):
