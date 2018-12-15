@@ -59,7 +59,7 @@ def get_posts(grId, isGroup, count, offset, reinited=0):
     except:
         
         if(reinited == len(cfg.globalCfg.credentials)):
-            print("After reiniting nothing fixed =c")
+            print("After reiniting nothing fixed =c. Closing...")
             raise SystemExit
 
         else:

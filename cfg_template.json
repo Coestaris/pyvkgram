@@ -13,5 +13,11 @@
     "admins" : [],
     "posts_per_request" : 2,
     "between_requests_delay" : 3,
-    "sendFileTimeout" : 20
+    "sendFileTimeout" : 20,
+    "dbPrefix" : "db",
+    "dbNames" : 
+    {
+        "main" : "main.db",
+        "posts" : "posts.db"
+    }
 }

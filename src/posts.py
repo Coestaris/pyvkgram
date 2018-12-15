@@ -47,6 +47,8 @@ class post:
 
             forward = input['copy_history'][0]
 
+            self.forwarded_from_id = forward['from_id']
+
             if('text' in forward): self.forwarded_text = forward['text']
             else: self.forwarded_text = ''
 
@@ -57,6 +59,7 @@ class post:
                     input.update( { 'attachments' : forward['attachments'] } )
 
         else: 
+            self.forwarded_from_id = 0
             self.forwarded_text = ''
             self.isForwarded = False
 
@@ -88,6 +91,8 @@ class post:
                     print('Unknown format {}'.format(attachment['type']))
                 elif(attachment['type'] == 'page'):
                     print('Unknown format {}'.format(attachment['type']))
+                elif(attachment['type'] == 'album'):
+                    print('Unknown format {}'.format(attachment['type']))
                 else:
                     print('Unknown format {}'.format(attachment['type']))
 
@@ -100,6 +105,7 @@ class post:
             "date" : self.date,
             "isAd" : self.isAd,
             "isPinned" : self.isPinned,
+            "forwaded_from_id" : self.forwarded_from_id,
             #"postSource" : self.postSource,
             "forwarded_text" : (self.forwarded_text[1:50] if len(self.forwarded_text) > 50 else self.forwarded_text) if self.forwarded_text != '' else "<empty>",
             "text" : (self.text[1:50] if len(self.text) > 50 else self.text) if self.text != '' else "<empty>",
@@ -226,16 +232,16 @@ class photoAttachment(attachment):
     def __init__(self, input):
         self.type = attachmentTypes.photo
 
-        if('id' in input): self.id = input['id'] 
+        if('id' in input): self.id = input['id']
         else: self.id = -1
 
-        if('album_id' in input): self.album_id = input['album_id'] 
+        if('album_id' in input): self.album_id = input['album_id']
         else: self.album_id = -1
 
-        if('width' in input): self.width = input['width'] 
+        if('width' in input): self.width = input['width']
         else: self.width = -1
 
-        if('height' in input): self.height = input['height'] 
+        if('height' in input): self.height = input['height']
         else: self.height = -1
 
         self.sizes = []

@@ -36,45 +36,66 @@ send_upload_photo_action = utils.send_action(telegram.ChatAction.UPLOAD_PHOTO)
 def start(bot, update):
     utils.incStatTG("start")
 
-    try:
-        if(not db.has_user(update.message.chat_id)):
-            db.store_user(dbUser.dbUser(teleid=update.message.chat_id, debugName=update.message.from_user.first_name))
+    currentDataPackage = {
+        "action" : "start",
+        "chat_id" : update.message.chat_id,
+    }
 
-        user = db.get_user(update.message.chat_id)
+    try:
+        if(not db.userHandle.has_user(update.message.chat_id)):
+            db.userHandle.store_user(dbUser.dbUser(teleid=update.message.chat_id, debugName=update.message.from_user.first_name))
+
+        user = db.userHandle.get_user(update.message.chat_id)
         update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
     
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 def help(bot, update):
     utils.incStatTG("help")
 
+    currentDataPackage = {
+        "action" : "help",
+        "chat_id" : update.message.chat_id,
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         update.message.reply_text(language.getLang(user.lang)["help"], reply_markup = { "remove_keyboard" : True })
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 def settings(bot, update):
     utils.incStatTG("settings")
     
+    currentDataPackage = {
+        "action" : "settings",
+        "chat_id" : update.message.chat_id,
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         bot.send_message(chat_id=user.teleId, text="Выбирите кнопку из списка", reply_markup=menuHandler.get_main_menu(user, bot))
     
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 def callback_inline(bot, update):
     utils.incStatTG("_inline_callbacks")
     
+    currentDataPackage = {
+        "action" : "_inline_callbacks",
+        "chat_id" : update.callback_query.message.chat_id,
+        "act" : update.callback_query.data
+    }
+
     try:
         query = update.callback_query
 
-        user = db.get_user(query.message.chat_id)
+        user = db.userHandle.get_user(query.message.chat_id)
         act = query.data
 
         markup = menuHandler.get_menu(act, user, bot)
@@ -84,27 +105,32 @@ def callback_inline(bot, update):
             bot.edit_message_reply_markup(chat_id=query.message.chat_id, reply_markup = markup, message_id=query.message.message_id)
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 def errorHandler(bot, update, error):
     utils.incStatTG("_error")
 
-    print(error)
     try:
-        postSender.notify_admin_message(error)
+        postSender.notify_admin(error)
+        #postSender.notify_admin_message(error)
         if(update != None):
-            user = db.get_user(update.message.chat_id)
+            user = db.userHandle.get_user(update.message.chat_id)
             update.message.reply_text(language.getLang(user.lang)["server_error"], reply_markup = { "remove_keyboard" : True })
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex) #No sense to put dataPackage here...
 
 @send_typing_action
 def unsubscribe(bot, update):
     utils.incStatTG("unsubscribe")
 
+    currentDataPackage = {
+        "action" : "unsubscribe",
+        "chat_id" : update.message.chat_id,
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
             update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"], reply_markup = { "remove_keyboard" : True })
             return
@@ -116,17 +142,23 @@ def unsubscribe(bot, update):
         reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
         update.message.reply_text(language.getLang(user.lang)["select_group"], reply_markup=reply_markup)
         user.currListening = 1
-        db.store_user(user)
+        db.userHandle.store_user(user)
     
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 def getPosts(bot, update):
     utils.incStatTG("getPosts")
 
+    currentDataPackage = {
+        "action" : "getPosts",
+        "chat_id" : update.message.chat_id,
+        "message_text" : update.message.text
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
             update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"], reply_markup = { "remove_keyboard" : True })
             return
@@ -149,20 +181,26 @@ def getPosts(bot, update):
         user.getPosts = { "count" : count, "offset" : offset }
         user.currListening = 2
 
-        db.store_user(user)
+        db.userHandle.store_user(user)
 
         reply_markup = telegram.ReplyKeyboardMarkup(custom_keyboard, resize_keyboard=True)
         update.message.reply_text(language.getLang(user.lang)["get_posts"].format(count), reply_markup=reply_markup)
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 def textInputHandler(bot, update):
     utils.incStatTG("_textInput")
 
+    currentDataPackage = {
+        "action" : "_textInput",
+        "chat_id" : update.message.chat_id,
+        "message_text" : update.message.text
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         if(groupRe.search(update.message.text)):
 
             id = int(update.message.text.split('-')[0].strip())
@@ -173,7 +211,7 @@ def textInputHandler(bot, update):
                 if(user.currListening == 1):
                     
                     user.vkGroups = [x for x in user.vkGroups if x["id"] != id]
-                    db.store_user(user)
+                    db.userHandle.store_user(user)
                     bot.send_message(
                         chat_id = update.message.chat_id, 
                         text = language.getLang(user.lang)["succ_removed_url"].format(name, id), 
@@ -200,21 +238,29 @@ def textInputHandler(bot, update):
                 return
 
             user.currListening = 0
-            db.store_user(user)
+            db.userHandle.store_user(user)
 
         else:
             update.message.reply_text(random.choice(language.getLang(user.lang)["text_reply"]), reply_markup = { "remove_keyboard" : True })
             return
     
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 def getGroups(bot, update):
     utils.incStatTG("getGroups")
 
+    currentDataPackage = {
+        "action" : "getGroups",
+        "chat_id" : update.message.chat_id,
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+
+        #sraise TypeError()
+
+        user = db.userHandle.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
             update.message.reply_text(language.getLang(user.lang)["group_list_is_empty"], reply_markup = { "remove_keyboard" : True })
         else:
@@ -228,15 +274,22 @@ def getGroups(bot, update):
                 text = text, 
                 parse_mode = telegram.ParseMode.MARKDOWN,
                 reply_markup = { "remove_keyboard" : True })  
+
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
         
 @send_typing_action
 def subscribe(bot, update):
     utils.incStatTG("subscribe")
 
+    currentDataPackage = {
+        "action" : "subscribe",
+        "chat_id" : update.message.chat_id,
+        "message_text" : update.message.text,
+    }
+
     try:
-        user = db.get_user(update.message.chat_id)
+        user = db.userHandle.get_user(update.message.chat_id)
         url = update.message.text.replace("/subscribe", "").strip()
         id = ""
 
@@ -268,7 +321,7 @@ def subscribe(bot, update):
             return
 
         user.vkGroups.append( { "name" : info[0], "id" : info[1] } )
-        db.store_user(user)
+        db.userHandle.store_user(user)
         
         bot.send_message(
             chat_id = update.message.chat_id, 
@@ -277,12 +330,17 @@ def subscribe(bot, update):
             reply_markup = { "remove_keyboard" : True })
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 @utils.restricted
 def adm_stat(bot, update):
     utils.incStatTG("adm_stat")
+
+    currentDataPackage = {
+        "action" : "adm_stat",
+        "chat_id" : update.message.chat_id,
+    }
 
     try:
         pid = os.getpid()
@@ -308,21 +366,27 @@ def adm_stat(bot, update):
                     "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
                     "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
                     "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
+            
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
     
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 @send_typing_action
 @utils.restricted
 def adm_db_dump(bot, update):
     utils.incStatTG("adm_dump")
 
+    currentDataPackage = {
+        "action" : "adm_dump",
+        "chat_id" : update.message.chat_id,
+    }
+
     try:
-        db.store_stat(cfg.globalStat)
+        db.statTimeHandle.store_stat(cfg.globalStat)
         
-        with open(db.dbFileName) as f:
+        with open(db.mainDBFileName) as f:
             data = json.load(f)
 
             bot.send_message(
@@ -332,13 +396,18 @@ def adm_db_dump(bot, update):
                 reply_markup = { "remove_keyboard" : True })
         
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)
 
 
 @send_typing_action
 @utils.restricted
 def adm_db_drop(bot, update):
     utils.incStatTG("adm_drop")
+
+    currentDataPackage = {
+        "action" : "adm_drop",
+        "chat_id" : update.message.chat_id,
+    }
 
     try:
         bot.send_message(
@@ -347,4 +416,4 @@ def adm_db_drop(bot, update):
             reply_markup = menuHandler.confirm_drop())
 
     except Exception as ex:
-        postSender.notify_admin(ex)
+        postSender.notify_admin(ex, currentDataPackage)

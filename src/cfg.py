@@ -1,7 +1,9 @@
+import json
+
 class cfg:
     def __init__(self, appId = '', admins = [], credentials = {}, tg_token = '', 
             timer_tick = 0, time_format = '', timeZone = 0, posts_to_get = 0, 
-            between_request_delay = 0, sendFileTimeout=0):
+            between_request_delay = 0, sendFileTimeout=0, dbPrefix = "", dbNames = ""):
         self.appId = appId
         self.admins = admins
         self.credentials = credentials
@@ -12,6 +14,8 @@ class cfg:
         self.posts_to_get = posts_to_get
         self.between_request_delay = between_request_delay
         self.sendFileTimeout = sendFileTimeout
+        self.dbPrefix = dbPrefix
+        self.dbNames = dbNames
 
 class stat:
     def __init__(self, vkRequests = {}, postAttachments = {}, tgRequests = {}, postSent = 0, forcedRequests = 0, postRecieved = 0):
@@ -44,5 +48,23 @@ class stat:
         )
         return a
 
-globalCfg = cfg()
+
+def loadCfg():
+    with open('../cfg.json') as f:
+        data = json.load(f)
+        return cfg(
+            appId=data["appId"],
+            admins=data["admins"],
+            credentials=data["credentials"],
+            tg_token=data["tg_token"],
+            timer_tick=data["timer_tick"],
+            time_format=data["time_format"],
+            timeZone=data["time_zone"],
+            posts_to_get=data["posts_per_request"],
+            between_request_delay=data["between_requests_delay"],
+            sendFileTimeout=data["sendFileTimeout"],
+            dbPrefix=data["dbPrefix"],
+            dbNames=data["dbNames"])
+
+globalCfg = loadCfg()
 globalStat = stat()

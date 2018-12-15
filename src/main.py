@@ -2,8 +2,8 @@ import logging
 
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater, CallbackQueryHandler
 
-import postSender
 import cfg
+import postSender
 import language
 import vkcore
 import tgcore
@@ -15,8 +15,6 @@ def main():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    logger.log(logging.INFO, "Loading configs...")
-    cfg.globalCfg = utils.loadCfg()
     utils.LIST_OF_ADMINS = cfg.globalCfg.admins
 
     logger.log(logging.INFO, "[CFG]. Timeout: %s", cfg.globalCfg.timer_tick)
@@ -25,10 +23,10 @@ def main():
     logger.log(logging.INFO, "[CFG]. Posts per requst: %s", cfg.globalCfg.posts_to_get)
 
     logger.log(logging.INFO, "Loading statistics...")
-    cfg.globalStat = db.get_stat()
+    cfg.globalStat = db.statTimeHandle.get_stat()
     if(cfg.globalStat is None):
         cfg.globalStat = cfg.stat()
-        db.store_stat(cfg.globalStat)
+        db.statTimeHandle.store_stat(cfg.globalStat)
     
     logger.log(logging.INFO, "Init vkcore...")
     vkcore.reinit(0)

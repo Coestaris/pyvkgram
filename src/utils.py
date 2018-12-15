@@ -46,8 +46,6 @@ def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
             print tr
             #input = replace_str_index( input, tr[0], tr[1], tr[2] )
 
-
-    print input
     return input
 
 def escape_string(input, isBold=False, isItalic=False):
@@ -106,22 +104,6 @@ def restricted(func):
             return
         return func(bot, update, *args, **kwargs)
     return wrapped
-
-def loadCfg():
-    with open('../cfg.json') as f:
-        data = json.load(f)
-        c = cfg.cfg(
-            appId=data["appId"],
-            admins=data["admins"],
-            credentials=data["credentials"],
-            tg_token=data["tg_token"],
-            timer_tick=data["timer_tick"],
-            time_format=data["time_format"],
-            timeZone=data["time_zone"],
-            posts_to_get=data["posts_per_request"],
-            between_request_delay=data["between_requests_delay"],
-            sendFileTimeout=data["sendFileTimeout"])
-        return c
 
 def incStat(key, array, c):
     if(key in array):

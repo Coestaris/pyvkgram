@@ -5,6 +5,7 @@ import time
 import traceback
 from datetime import datetime
 import shutil
+import json
 
 import requests
 import telegram
@@ -202,36 +203,25 @@ def send_post(bot, grName, grId, post, user):
 
     pass
  
-def notify_admin_message(error):
-    utils.incStatTG("_error_notified")
-
-    print("Error: {}\nAdmin has been notified".format(error))
-    for admin in cfg.globalCfg.admins:
-        tgcore.bot.send_message(
-            chat_id=admin,
-            text="*Unhandled bot error (message type)!*\n\n{}".format(
-                utils.escape_string(error, False, False)), 
-            parse_mode = telegram.ParseMode.MARKDOWN)
-    pass
-
-def notify_admin(ex):
+def notify_admin(ex, data = None):
     utils.incStatTG("_error_notified")
     
     print("Error: {}\nAdmin has been notified".format(ex))
     for admin in cfg.globalCfg.admins:
         tgcore.bot.send_message(
             chat_id=admin,
-            text="*Unhandled bot error!*\n\n_{}_\n\n{}".format(
-                utils.escape_string(ex.__str__(), False, True), 
-                utils.escape_string(traceback.format_exc(), False, False)), 
+            text="*Unhandled bot error!*\n\n_{}_\n\n{}{}".format(
+                utils.escape_string(ex.__str__(), False, False), 
+                utils.escape_string(traceback.format_exc(), False, False),
+                "\n\nAvailable data package: _{}_".format(utils.escape_string(json.dumps(data, sort_keys=True, indent=2), isBold=False, isItalic=True)) if data != None else ""), 
             parse_mode = telegram.ParseMode.MARKDOWN)
     pass
 
 
-lastUpdate = db.get_time()
+lastUpdate = db.statTimeHandle.get_time()
 if(lastUpdate == None):
     lastUpdate = time.time()
-    db.store_time(lastUpdate)
+    db.statTimeHandle.store_time(lastUpdate)
 
 def interval_func():
 
@@ -244,7 +234,7 @@ def interval_func():
 
     try:
 
-        for user in db.get_users():
+        for user in db.userHandle.get_users():
             for group in user.vkGroups:
             
                 posts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, 0)
@@ -257,7 +247,6 @@ def interval_func():
                     nposts = vkcore.get_posts(group["id"], True, cfg.globalCfg.posts_to_get, postsRerecieved)
                     postsRerecieved += len(nposts)
 
-                    #print [x.toDebugJSON() for x in nposts]
                     time.sleep(cfg.globalCfg.between_request_delay)
                     posts += nposts
                 
@@ -271,6 +260,7 @@ def interval_func():
                 for post in postsToSend:
                     send_post(tgcore.bot, group["name"], group["id"], post, user)
                     postsSent += 1
+
     except Exception as ex:
         notify_admin(ex)
 
@@ -279,6 +269,6 @@ def interval_func():
     cfg.globalStat.forcedRequests += postsRerecieved
 
     lastUpdate = updateStartTime
-    db.store_time(lastUpdate)
-    db.store_stat(cfg.globalStat)
+    db.statTimeHandle.store_time(lastUpdate)
+    db.statTimeHandle.store_stat(cfg.globalStat)
     pass
