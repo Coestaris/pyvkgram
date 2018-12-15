@@ -1,9 +1,12 @@
 from enum import Enum
 from time import sleep
+import re
 
 import vkcore
 import cfg
 import utils
+
+linkRegex = re.compile(r"\\\[(.+?)\|(.+?)\]", re.MULTILINE)
 
 class post:
     
@@ -163,7 +166,7 @@ class docAttachment(attachment):
 class linkAttachment(attachment):
 
     def toMarkdown(self):
-        return u"[{}]({})".format(self.title, self.url)
+        return utils.formatLink(self.url, self.title)
 
     def __init__(self, input):
         self.type = attachmentTypes.link
@@ -267,3 +270,25 @@ class photoAttachment(attachment):
             "height" : self.height,
             "sizes" : self.sizes  
         }
+
+
+def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
+    matches = re.finditer(linkRegex, input)
+    toReplace = []
+    #print(input)
+    
+    for match in matches:
+        start = match.start()
+        end = match.end()
+        link = match.group(1)
+        caption = match.group(2)
+
+        toReplace.append( (start, end, utils.formatLink(toAdd.format(link), caption) ) )
+
+    if(len(toReplace) != 0):
+        #print toReplace
+        for tr in reversed(toReplace):
+            print tr
+            input = utils.replace_str_index( input, tr[0], tr[1], tr[2] )
+
+    return input

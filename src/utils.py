@@ -5,10 +5,14 @@ from functools import wraps
 import cfg
 import language
 import db
-import re
 
-LIST_OF_ADMINS = []
-linkRegex = re.compile(r"\\\[(.+?)\|(.+?)\]", re.MULTILINE)
+ef_default = 0
+ef_bold = 1
+ef_italic = 2
+ef_link = 3
+
+def formatLink(url, label):
+    return u"[{}]({})".format(escape_string(label, ef_link), url)
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -23,36 +27,12 @@ def replace_str_index(text, start_index=0, end_index=0, replacement=''):
         replacement, 
         text[start_index + end_index:])
 
-def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
-    matches = re.finditer(linkRegex, input)
-    toReplace = []
-
-    #print(input)
-    
-    for match in matches:
-        start = match.start()
-        end = match.end()
-
-        link = match.group(1)
-        caption = match.group(2)
-
-        toReplace.append( (start, end, u"[{}]({})".format( caption, toAdd.format(link)) ) )
-
-    if(len(toReplace) != 0):
-
-        #print toReplace
-
-        for tr in reversed(toReplace):
-            print tr
-            #input = replace_str_index( input, tr[0], tr[1], tr[2] )
-
-    return input
-
-def escape_string(input, isBold=False, isItalic=False):
+def escape_string(input, format = ef_default):
     input = u"{}".format(input)
     
-    if(isBold): return input.replace("*", "\\*")
-    elif(isItalic): return input.replace("_", "\\_")
+    if(format == ef_bold): return input.replace("*", "\\*")
+    elif(format == ef_italic): return input.replace("_", "\\_")
+    elif(format == ef_link): return input.replace("[", "\\[").replace("]", "\\]")
     else: return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
 
 def display_time(seconds, granularity=2):
@@ -99,7 +79,7 @@ def restricted(func):
     @wraps(func)
     def wrapped(bot, update, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in LIST_OF_ADMINS:
+        if user_id not in cfg.globalCfg.admins:
             update.message.reply_text(language.getLang("ru")["err_not_allowed"].format(user_id))
             return
         return func(bot, update, *args, **kwargs)

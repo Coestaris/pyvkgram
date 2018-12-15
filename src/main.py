@@ -15,8 +15,6 @@ def main():
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    utils.LIST_OF_ADMINS = cfg.globalCfg.admins
-
     logger.log(logging.INFO, "[CFG]. Timeout: %s", cfg.globalCfg.timer_tick)
     logger.log(logging.INFO, "[CFG]. Between request delay: %s", cfg.globalCfg.between_request_delay)
     logger.log(logging.INFO, "[CFG]. Time zone: %s", cfg.globalCfg.time_zone)

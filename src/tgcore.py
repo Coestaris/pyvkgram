@@ -258,7 +258,12 @@ def getGroups(bot, update):
 
     try:
 
-        #sraise TypeError()
+        #bot.send_message(
+        #        chat_id = update.message.chat_id, 
+        #        text = "{", 
+        #        reply_markup = { "remove_keyboard" : True })  
+
+        #raise TypeError()
 
         user = db.userHandle.get_user(update.message.chat_id)
         if(len(user.vkGroups) == 0):
@@ -267,7 +272,7 @@ def getGroups(bot, update):
             text = language.getLang(user.lang)["group_list"] + '\n'
             for group in user.vkGroups:
                 text += language.getLang(user.lang)["get_groups"].format(
-                    utils.escape_string(group["name"], True), group["id"])
+                    utils.escape_string(group["name"], utils.ef_bold), group["id"])
             
             bot.send_message(
                 chat_id = update.message.chat_id, 
@@ -363,9 +368,9 @@ def adm_stat(bot, update):
                     cfg.globalStat.postSent,
                     cfg.globalStat.postRecieved,
                     cfg.globalStat.forcedRequests,
-                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
-                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
-                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, True), utils.escape_string(v, False, True)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
+                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
+                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
+                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
             
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })

@@ -16,6 +16,7 @@ import language
 import tgcore
 import utils
 from posts import attachmentTypes 
+from posts import makeVKLinks
 import vkcore
 
 def getText(grName, grId, post, user):
@@ -43,10 +44,14 @@ def getText(grName, grId, post, user):
             u'➡️' if post.isForwarded else ' ')
 
     if(post.text != ''):
-        text += u"\n\n" + utils.makeVKLinks(post.escapeText())
+        text += u"\n\n" + makeVKLinks(post.escapeText())
 
-    if(post.forwarded_text != ''):
-        text += lang["ori_post_text"].format(utils.makeVKLinks(post.escapeFText()))
+    if(post.forwarded_from_id != 0):
+
+        _name, _id = vkcore.get_group_info(post.forwarded_from_id)
+        text += lang["forwaded_from"].format(utils.escape_string(_name, utils.ef_italic))
+        if(post.forwarded_text != ""):
+            text += lang["ori_post_text"].format(makeVKLinks(post.escapeFText()))
 
     return text
 
@@ -211,9 +216,9 @@ def notify_admin(ex, data = None):
         tgcore.bot.send_message(
             chat_id=admin,
             text="*Unhandled bot error!*\n\n_{}_\n\n{}{}".format(
-                utils.escape_string(ex.__str__(), False, False), 
-                utils.escape_string(traceback.format_exc(), False, False),
-                "\n\nAvailable data package: _{}_".format(utils.escape_string(json.dumps(data, sort_keys=True, indent=2), isBold=False, isItalic=True)) if data != None else ""), 
+                utils.escape_string(ex.__str__(), utils.ef_italic), 
+                utils.escape_string(traceback.format_exc()),
+                "\n\nAvailable data package: _{}_".format(utils.escape_string(json.dumps(data, sort_keys=True, indent=2), utils.ef_italic)) if data != None else ""), 
             parse_mode = telegram.ParseMode.MARKDOWN)
     pass
 
@@ -258,6 +263,7 @@ def interval_func():
                         postsToSend.append(post)
                 
                 for post in postsToSend:
+                    print "sending {} to {}".format(post.toDebugJSON(), user.teleId) 
                     send_post(tgcore.bot, group["name"], group["id"], post, user)
                     postsSent += 1
 
