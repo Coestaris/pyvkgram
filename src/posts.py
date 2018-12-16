@@ -275,7 +275,6 @@ class photoAttachment(attachment):
 def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
     matches = re.finditer(linkRegex, input)
     toReplace = []
-    #print(input)
     
     for match in matches:
         start = match.start()
@@ -286,10 +285,7 @@ def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
         toReplace.append( (start, end, utils.formatLink(toAdd.format(link), caption) ) )
 
     if(len(toReplace) != 0):
-        #print toReplace
         for tr in reversed(toReplace):
-            print tr
             input = utils.replace_str_index( input, tr[0], tr[1], tr[2] )
-            print input
 
     return input
