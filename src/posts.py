@@ -290,5 +290,6 @@ def makeVKLinks(input, toAdd=u'https://vk.com/{}'):
         for tr in reversed(toReplace):
             print tr
             input = utils.replace_str_index( input, tr[0], tr[1], tr[2] )
+            print input
 
     return input

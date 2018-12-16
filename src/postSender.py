@@ -48,10 +48,22 @@ def getText(grName, grId, post, user):
 
     if(post.forwarded_from_id != 0):
 
-        _name, _id = vkcore.get_group_info(post.forwarded_from_id)
-        text += lang["forwaded_from"].format(utils.escape_string(_name, utils.ef_italic))
+        if(post.forwarded_from_id < 0):
+            #sent from group
+            _name, _id = vkcore.get_group_info(-post.forwarded_from_id)
+            text += lang["forwaded_from"].format(utils.escape_string(_name, utils.ef_bold))
+        
+        else:
+            fname, sname = vkcore.get_user_info(post.forwarded_from_id)
+            text += lang["forwaded_from"].format(lang["name_format"].format(
+                utils.escape_string(fname, utils.ef_bold),
+                utils.escape_string(sname, utils.ef_bold)
+            ))
+
         if(post.forwarded_text != ""):
             text += lang["ori_post_text"].format(makeVKLinks(post.escapeFText()))
+
+
 
     return text
 
@@ -211,6 +223,8 @@ def send_post(bot, grName, grId, post, user):
 def notify_admin(ex, data = None):
     utils.incStatTG("_error_notified")
     
+    data=None
+
     print("Error: {}\nAdmin has been notified".format(ex))
     for admin in cfg.globalCfg.admins:
         tgcore.bot.send_message(

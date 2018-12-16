@@ -258,10 +258,13 @@ def getGroups(bot, update):
 
     try:
 
+        #text = "#\n\nAvailable data package: _\n{}_\n".format(utils.escape_string(json.dumps(currentDataPackage, sort_keys=True, indent=2), utils.ef_italic)) if currentDataPackage != None else ""
+        #print text
         #bot.send_message(
-        #        chat_id = update.message.chat_id, 
-        #        text = "{", 
-        #        reply_markup = { "remove_keyboard" : True })  
+                #chat_id = update.message.chat_id, 
+                #text = text,
+                #parse_mode = telegram.ParseMode.MARKDOWN,
+                #reply_markup = { "remove_keyboard" : True })  
 
         #raise TypeError()
 

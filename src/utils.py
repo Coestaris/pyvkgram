@@ -25,7 +25,7 @@ def replace_str_index(text, start_index=0, end_index=0, replacement=''):
     return u"{}{}{}".format(
         text[:start_index], 
         replacement, 
-        text[start_index + end_index:])
+        text[end_index:])
 
 def escape_string(input, format = ef_default):
     input = u"{}".format(input)

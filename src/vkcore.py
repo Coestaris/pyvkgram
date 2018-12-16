@@ -28,6 +28,17 @@ def get_group_info(grId):
     response = api.groups.getById(group_id=grId, fields=['name', 'id'])
     return ( response[0]["name"], response[0]["id"] )
 
+def get_user_info(userID):
+    utils.incStatVK("users.get")
+
+    global api
+    response = api.users.get(group_id=userID, fields=['first_name', 'last_name'])
+
+    print response
+
+    return ( response[0]["first_name"], response[0]["last_name"] )
+
+
 def get_video(owner, vidID, access_key):
     utils.incStatVK("video.get")
 
