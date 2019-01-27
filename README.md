@@ -2,6 +2,8 @@
 ==================
 > [@vkgrammbot](https://t.me/vkgrammbot)
 
+Telegram Бот для автоматического репоста постов с [ВК](https://vk.com) в Телеграмм
+
 Read in english [here](https://github.com/Coestaris/pyvkgram/blob/master/README_en.md)
 
 Возможности бота:
@@ -12,8 +14,6 @@ Read in english [here](https://github.com/Coestaris/pyvkgram/blob/master/README_
 ![Screenshot1](https://user-images.githubusercontent.com/19210828/50569335-35fdd480-0d6b-11e9-88c9-a827769231ca.PNG)
 ![Screenshot2](https://user-images.githubusercontent.com/19210828/50569336-35fdd480-0d6b-11e9-85e5-07aa305abcb2.PNG)
 ![Screenshot3](https://user-images.githubusercontent.com/19210828/50569337-35fdd480-0d6b-11e9-8509-8651512606a0.PNG)
-
-Telegram Бот для автоматического репоста постов с ВК в Телеграмм
 
 Установка
 -----------------
