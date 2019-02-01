@@ -169,7 +169,11 @@ def send_post(bot, grName, grId, post, user):
                         
                         dirName = u"{}/{}".format(parentDir, "download_data") 
                         
-                        shutil.rmtree(dirName)
+                        try:
+                            shutil.rmtree(dirName)
+                        except:
+                            pass
+        
                         os.mkdir(dirName)
 
                         counter = 0
