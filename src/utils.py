@@ -41,28 +41,6 @@ def display_time_minimal(seconds):
     else:
         return "{}:{}:{}".format(seconds // 3600, seconds // 60, seconds % 60)
 
-def display_time(seconds, granularity=2):
-    
-    intervals = (
-        ('months', 2419200), # 60 * 60 * 24 * 7 * 4
-        ('weeks', 604800),   # 60 * 60 * 24 * 7
-        ('days', 86400),     # 60 * 60 * 24
-        ('hours', 3600),     # 60 * 60
-        ('minutes', 60),     # 60
-        ('seconds', 1),
-    )
-    
-    result = []
-
-    for name, count in intervals:
-        value = seconds // count
-        if value:
-            seconds -= value * count
-            if value == 1:
-                name = name.rstrip('s')
-            result.append("{0:.0f} {1}".format(value, name))
-    return ', '.join(result[:granularity])
-
 def set_interval(func, sec):
     def func_wrapper():
         set_interval(func, sec)

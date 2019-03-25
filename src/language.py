@@ -104,24 +104,66 @@ u"""Бот для автоматического репоста постов с 
             "menu_format_autor" : u"{}Отображать автора поста",
             "menu_format_close" : "Назад",
 
-            "dropped" : u"Database dropped!",
-            "drop_confirm" : "Are you sure you want to drop database?",
-            "drop_drop" : "Drop",
-            "drop_cancel" : "Cancel",
-            "dump_text" : u"Here's text dump for you...\n```json{{\n{}```",
-            "dump_file" : u"Here's file dump for you...",
-            "unhandled_error": "*Unhandled bot error!*\n\n_{}_\n\n{}{}",
-            "unhandled_error_package": "\n\nAvailable data package: _{}_",
+            "dropped" : u"База данных сброшена!",
+            "drop_confirm" : u"Вы дейтсвительно желаете сбросить всю БДху?",
+            "drop_drop" : u"Сбросить",
+            "drop_cancel" : u"Отмена",
+            "dump_text" : u"Вот тебе текстовый дамп, любимый...\n```json{{\n{}```",
+            "dump_file" : u"Вот тебе файловый дамп, любимый...",
+            "unhandled_error": u"*Непредусмотренная ошибка!*\n\n_{}_\n\n{}{}",
+            "unhandled_error_package": u"\n\nДоступные данные: _{}_",
             "stat": 
-                u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}" +
-                u"\n\n*Posts Sent*: {}\n*Posts recieved*: {}\n*Posts reRecieved*: {}" +
-                u"\n\n*Post attachments*: {}\n\n*VK Requests*: {}\n\n*Telegram calls*: {}",
+                u"*CPU*: {}_%_\n\n*Память*:\n_Общее_: {}\n_Доступно_: {}\n_Свободно_: {}\n_Использовано_: {} ({}%)\n\n*Ап-тайм сервера*: {}\n\n*Ап-тайм бота*: {}" +
+                u"\n\n*Отправлeно постов*: {}\n*Постов обработано*: {}\n*Повторных запросов постов*: {}" +
+                u"\n\n*Вложения постов*: {}\n\n*VK Запросы*: {}\n\n*Telegram запросы*: {}",
             
-            "stat_list_empty" : "list is empty",
+            "stat_list_empty" : u"Список пуст",
             "stat_list_item" : u"  - *{}* : _{}_"
         }
     }
 ]
+
+months_dict_ru =  [u"месяц",   u"месяца",  u"месяцев"]
+weeks_dict_ru =   [u"неделя",  u"недели",  u"недель"]
+days_dict_ru =    [u"день",    u"дня",     u"дней"]
+hours_dict_ru =   [u"час",     u"часа",    u"часов"]
+minutes_dict_ru = [u"минута",  u"минуты",  u"минут"]
+seconds_dict_ru = [u"секунда", u"секунды", u"секунд"]
+
+dict_en = [ "month", "week", "day", "hour", "minute", "second" ]
+
+def date_make_rus(value, dict, i):
+    ld = value % 10
+    if(ld == 1): return dict[0]
+    elif(ld == 2 or ld == 3 or ld == 4): return dict[1]
+    else: return dict[2]
+
+def date_make_en(value, dict, i):
+    if(value == 1): return dict[i]
+    else: return dict[i] + u's'
+
+def make_date(value, dict, lang, i):
+    if(lang == 'ru'): return date_make_rus(value, dict, i)
+    elif(lang == 'en'): return date_make_en(value, dict, i)
+    else: pass 
+
+intervals = (
+    ( 1, { 'ru' : months_dict_ru,  'en' : dict_en }, 2419200), # 60 * 60 * 24 * 7 * 4
+    ( 2, { 'ru' : weeks_dict_ru,   'en' : dict_en }, 604800),  # 60 * 60 * 24 * 7
+    ( 3, { 'ru' : days_dict_ru,    'en' : dict_en }, 86400),   # 60 * 60 * 24
+    ( 4, { 'ru' : hours_dict_ru,   'en' : dict_en }, 3600),    # 60 * 60
+    ( 5, { 'ru' : minutes_dict_ru, 'en' : dict_en }, 60),      # 60
+    ( 6, { 'ru' : seconds_dict_ru, 'en' : dict_en }, 1),       # 1
+)
+
+def display_time(seconds, lang, granularity=2):
+    result = []
+    for index, dict, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            result.append(u"{0:.0f} {1}".format(value, make_date(value, dict[lang], lang, index)))
+    return u', '.join(result[:granularity])
 
 def getLang(l):
     global lang

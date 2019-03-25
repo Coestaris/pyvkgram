@@ -352,7 +352,9 @@ def adm_stat(bot, update):
 
     try:
 
-        lang = language.getLang(db.userHandle.get_user(update.message.chat_id).lang)
+        langCode = db.userHandle.get_user(update.message.chat_id).lang
+        lang = language.getLang(langCode)
+        
         pid = os.getpid()
         py = psutil.Process(pid)
         mem = psutil.virtual_memory()
@@ -366,8 +368,8 @@ def adm_stat(bot, update):
                     utils.sizeof_fmt(mem.free), 
                     utils.sizeof_fmt(mem.used), 
                     mem.percent, 
-                    utils.display_time(time.time() - psutil.boot_time(), 5), 
-                    utils.display_time(time.time() - py.create_time(), 5),
+                    language.display_time(time.time() - psutil.boot_time(), langCode, 5), 
+                    language.display_time(time.time() - py.create_time(), langCode, 5),
                     cfg.globalStat.postSent,
                     cfg.globalStat.postRecieved,
                     cfg.globalStat.forcedRequests,
