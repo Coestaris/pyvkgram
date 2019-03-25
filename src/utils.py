@@ -35,13 +35,20 @@ def escape_string(input, format = ef_default):
     elif(format == ef_link): return input.replace("[", "\\[").replace("]", "\\]")
     else: return input.replace("_", "\\_").replace("*", "\\*").replace("[", "\\[").replace("`", "\\`")
 
+def display_time_minimal(seconds):
+    if(seconds < 3600):
+        return "{}:{}".format(seconds // 60, seconds % 60)
+    else:
+        return "{}:{}:{}".format(seconds // 3600, seconds // 60, seconds % 60)
+
 def display_time(seconds, granularity=2):
     
     intervals = (
-        ('weeks', 604800),  # 60 * 60 * 24 * 7
-        ('days', 86400),    # 60 * 60 * 24
-        ('hours', 3600),    # 60 * 60
-        ('minutes', 60),
+        ('months', 2419200), # 60 * 60 * 24 * 7 * 4
+        ('weeks', 604800),   # 60 * 60 * 24 * 7
+        ('days', 86400),     # 60 * 60 * 24
+        ('hours', 3600),     # 60 * 60
+        ('minutes', 60),     # 60
         ('seconds', 1),
     )
     

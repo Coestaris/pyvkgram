@@ -84,12 +84,12 @@ def get_menu(act, user, bot):
         bot.send_message(chat_id = user.teleId, text = lang['dropped'])
         return {}
 
-def confirm_drop():
+def confirm_drop(lang):
     array = []
     count = random.randint(3, 5)
     yes = random.randint(1, count) - 1
     for a in range(0, count):
-        array.append([telegram.InlineKeyboardButton(text=u"%s" % "drop" if a == yes else "cancel",
+        array.append([telegram.InlineKeyboardButton(text=u"%s" % lang["drop_drop"] if a == yes else lang["drop_cancel"],
             callback_data= ("adm_drop" if a == yes else "adm_drop_cancel"))])
 
     return telegram.InlineKeyboardMarkup(array)

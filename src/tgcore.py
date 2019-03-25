@@ -78,7 +78,7 @@ def settings(bot, update):
 
     try:
         user = db.userHandle.get_user(update.message.chat_id)
-        bot.send_message(chat_id=user.teleId, text="Выбирите кнопку из списка", reply_markup=menuHandler.get_main_menu(user, bot))
+        bot.send_message(chat_id=user.teleId, text=language.getLang(user.teleId)["menu"], reply_markup=menuHandler.get_main_menu(user, bot))
     
     except Exception as ex:
         postSender.notify_admin(ex, currentDataPackage)
@@ -351,16 +351,16 @@ def adm_stat(bot, update):
     }
 
     try:
+
+        lang = language.getLang(db.userHandle.get_user(update.message.chat_id).lang)
         pid = os.getpid()
         py = psutil.Process(pid)
         mem = psutil.virtual_memory()
 
         bot.send_message(
             chat_id = update.message.chat_id, 
-            text = (u"*CPU*: {}_%_\n\n*Mem*:\n_Total_: {}\n_Available_: {}\n_Free_: {}\n_Used_: {} ({}%)\n\n*Server uptime*: {}\n\n*Bot uptime*: {}" +
-            u"\n\n*Posts Sent*: {}\n*Posts recieved*: {}\n*Posts reRecieved*: {}" +
-            u"\n\n*Post attachments*: {}\n\n*VK Requests*: {}\n\n*Telegram calls*: {}")
-                .format(psutil.cpu_percent(), 
+            text = lang["stat"].format(
+                    psutil.cpu_percent(), 
                     utils.sizeof_fmt(mem.total), 
                     utils.sizeof_fmt(mem.available), 
                     utils.sizeof_fmt(mem.free), 
@@ -371,9 +371,9 @@ def adm_stat(bot, update):
                     cfg.globalStat.postSent,
                     cfg.globalStat.postRecieved,
                     cfg.globalStat.forcedRequests,
-                    "list is empty" if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
-                    "list is empty" if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
-                    "list is empty" if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([u"  - *{}* : _{}_".format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
+                    lang["stat_empty"] if len(cfg.globalStat.postAttachments) == 0 else '\n' + "\n".join([lang["stat_list_item"].format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.postAttachments.items())]),
+                    lang["stat_empty"] if len(cfg.globalStat.vkRequests) == 0 else '\n' +"\n".join([lang["stat_list_item"].format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.vkRequests.items())]),
+                    lang["stat_empty"] if len(cfg.globalStat.tgRequests) == 0 else '\n' +"\n".join([lang["stat_list_item"].format(utils.escape_string(k, utils.ef_bold), utils.escape_string(v, utils.ef_italic)) for k, v in iter(cfg.globalStat.tgRequests.items())])),
             
             parse_mode = telegram.ParseMode.MARKDOWN,
             reply_markup = { "remove_keyboard" : True })
@@ -383,7 +383,7 @@ def adm_stat(bot, update):
 
 @send_typing_action
 @utils.restricted
-def adm_db_dump(bot, update):
+def adm_db_dump(bot, update, args):
     utils.incStatTG("adm_dump")
 
     currentDataPackage = {
@@ -393,15 +393,23 @@ def adm_db_dump(bot, update):
 
     try:
         db.statTimeHandle.store_stat(cfg.globalStat)
-        
-        with open(db.mainDBFileName) as f:
-            data = json.load(f)
+        lang = language.getLang(db.userHandle.get_user(update.message.chat_id).lang)
 
-            bot.send_message(
-                chat_id = update.message.chat_id, 
-                text = u"```json{{\n{}```".format(json.dumps(data, sort_keys=True, indent=2)),
-                parse_mode = telegram.ParseMode.MARKDOWN,
-                reply_markup = { "remove_keyboard" : True })
+        #print(lang)
+
+        if(len(args) == 0 or args[0] != 't'):
+            with open(db.mainDBFileName) as f:
+                bot.send_document(chat_id=update.message.chat_id, document=f,
+                    caption=lang["dump_file"])
+
+        else:
+            with open(db.mainDBFileName) as f:
+                data = json.load(f)
+                bot.send_message(
+                    chat_id = update.message.chat_id, 
+                    text = lang["dump_text"].format(json.dumps(data, sort_keys=True, indent=2)),
+                    parse_mode = telegram.ParseMode.MARKDOWN,
+                    reply_markup = { "remove_keyboard" : True })
         
     except Exception as ex:
         postSender.notify_admin(ex, currentDataPackage)
@@ -418,10 +426,12 @@ def adm_db_drop(bot, update):
     }
 
     try:
+        lang = language.getLang(db.userHandle.get_user(update.message.chat_id).lang)
+
         bot.send_message(
             chat_id = update.message.chat_id, 
-            text = "Are you sure you want to drop database?",
-            reply_markup = menuHandler.confirm_drop())
+            text = lang["drop_confirm"],
+            reply_markup = menuHandler.confirm_drop(lang))
 
     except Exception as ex:
         postSender.notify_admin(ex, currentDataPackage)

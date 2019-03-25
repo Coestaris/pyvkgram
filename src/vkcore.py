@@ -32,9 +32,7 @@ def get_user_info(userID):
     utils.incStatVK("users.get")
 
     global api
-    response = api.users.get(group_id=userID, fields=['first_name', 'last_name'])
-
-    print response
+    response = api.users.get(user_ids=[userID], fields=['first_name', 'last_name'])
 
     return ( response[0]["first_name"], response[0]["last_name"] )
 
@@ -83,6 +81,7 @@ def get_posts(grId, isGroup, count, offset, reinited=0):
     #print response
     posts = []
     for x in response["items"]:
+        print(x)        
         posts.append(post(x))
 
     return posts

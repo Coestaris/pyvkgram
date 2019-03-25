@@ -63,9 +63,7 @@ def getText(grName, grId, post, user):
         if(post.forwarded_text != ""):
             text += lang["ori_post_text"].format(makeVKLinks(post.escapeFText()))
 
-
-
-    return text
+    return text + "\n"
 
 def send_post(bot, grName, grId, post, user):
     try:
@@ -102,7 +100,11 @@ def send_post(bot, grName, grId, post, user):
 
             else:
                 #TODO!
-                text += language.getLang(user.lang)["post_video"].format(post.attachments[0].getUrl())
+                text += language.getLang(user.lang)["post_video"].format(
+                    utils.escape_string(post.attachments[0].title, format=utils.ef_bold),
+                    utils.display_time_minimal(post.attachments[0].duration),
+                    post.attachments[0].getUrl())
+
                 bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
 
                 #bot.send_chat_action(chat_id=id, action=telegram.ChatAction.UPLOAD_VIDEO)
@@ -149,7 +151,10 @@ def send_post(bot, grName, grId, post, user):
                         text += '\n' + a.getUrl()
 
                     else:                    
-                        text += language.getLang(user.lang)["post_video"].format(a.getUrl())
+                        text += language.getLang(user.lang)["post_video"].format(
+                            utils.escape_string(a.title, utils.ef_bold),
+                            utils.display_time_minimal(a.duration),
+                            a.getUrl())
                     #media_group.append(telegram.InputMediaVideo(a.getUrl()))
             
                 if(len(media_group) != 0):
@@ -220,7 +225,7 @@ def send_post(bot, grName, grId, post, user):
             bot.send_message(chat_id = id, text = text, parse_mode = telegram.ParseMode.MARKDOWN)
             
     except telegram.utils.request.TimedOut:
-        print "Timeout =c"
+        print("Timeout =c")
 
     pass
  
@@ -229,14 +234,15 @@ def notify_admin(ex, data = None):
     
     data=None
 
-    print("Error: {}\nAdmin has been notified".format(ex))
+    print("Error: {}. Admin has been notified".format(ex))
     for admin in cfg.globalCfg.admins:
+        lang = language.getLang(db.userHandle.get_user(admin).lang)
         tgcore.bot.send_message(
             chat_id=admin,
-            text="*Unhandled bot error!*\n\n_{}_\n\n{}{}".format(
+            text=lang["unhandled_error"].format(
                 utils.escape_string(ex.__str__(), utils.ef_italic), 
                 utils.escape_string(traceback.format_exc()),
-                "\n\nAvailable data package: _{}_".format(utils.escape_string(json.dumps(data, sort_keys=True, indent=2), utils.ef_italic)) if data != None else ""), 
+                lang["unhandled_error_package"].format(utils.escape_string(json.dumps(data, sort_keys=True, indent=2), utils.ef_italic)) if data != None else ""), 
             parse_mode = telegram.ParseMode.MARKDOWN)
     pass
 
@@ -281,7 +287,7 @@ def interval_func():
                         postsToSend.append(post)
                 
                 for post in postsToSend:
-                    print "sending {} to {}".format(post.toDebugJSON(), user.teleId) 
+                    print("sending {} to {}".format(post.toDebugJSON(), user.teleId)) 
                     send_post(tgcore.bot, group["name"], group["id"], post, user)
                     postsSent += 1
 

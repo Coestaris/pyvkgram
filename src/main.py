@@ -43,8 +43,8 @@ def main():
     dp.add_handler(CommandHandler("getposts", tgcore.getPosts))
     
     #dp.add_handler(CommandHandler("adm_restart", getPosts))
-    dp.add_handler(CommandHandler("adm_dbdump", tgcore.adm_db_dump))
-    dp.add_handler(CommandHandler("dump", tgcore.adm_db_dump))
+    dp.add_handler(CommandHandler("adm_dbdump", tgcore.adm_db_dump, pass_args=True))    
+    dp.add_handler(CommandHandler("dump", tgcore.adm_db_dump, pass_args=True))
 
     dp.add_handler(CommandHandler("adm_stat", tgcore.adm_stat))
     dp.add_handler(CommandHandler("stat", tgcore.adm_stat))
