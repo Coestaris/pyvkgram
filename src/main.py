@@ -49,8 +49,8 @@ def main():
     dp.add_handler(CommandHandler("adm_stat", tgcore.adm_stat))
     dp.add_handler(CommandHandler("stat", tgcore.adm_stat))
 
-    dp.add_handler(CommandHandler("adm_dbdrop", tgcore.adm_db_drop))
-    dp.add_handler(CommandHandler("drop", tgcore.adm_db_drop))
+    dp.add_handler(CommandHandler("adm_stop", tgcore.adm_stop))
+    dp.add_handler(CommandHandler("stop", tgcore.adm_stop))
 
     dp.add_handler(CallbackQueryHandler(tgcore.callback_inline))
 

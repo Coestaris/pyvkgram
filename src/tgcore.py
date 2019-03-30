@@ -5,6 +5,7 @@ import psutil
 import re
 import telegram
 import random
+import sys
 import json
 from datetime import datetime
 import traceback
@@ -78,7 +79,7 @@ def settings(bot, update):
 
     try:
         user = db.userHandle.get_user(update.message.chat_id)
-        bot.send_message(chat_id=user.teleId, text=language.getLang(user.teleId)["menu"], reply_markup=menuHandler.get_main_menu(user, bot))
+        bot.send_message(chat_id=user.teleId, text=language.getLang(user.lang)["menu"], reply_markup=menuHandler.get_main_menu(user, bot))
     
     except Exception as ex:
         postSender.notify_admin(ex, currentDataPackage)
@@ -382,6 +383,18 @@ def adm_stat(bot, update):
     
     except Exception as ex:
         postSender.notify_admin(ex, currentDataPackage)
+
+@send_typing_action
+@utils.restricted
+def adm_stop(bot, update):
+    try:
+         bot.send_message(
+            chat_id = update.message.chat_id, 
+            text = "Shutting down...",
+            reply_markup = { "remove_keyboard" : True })
+    except:
+        pass
+    sys.exit()
 
 @send_typing_action
 @utils.restricted
